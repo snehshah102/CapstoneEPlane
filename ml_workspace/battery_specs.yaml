@@ -1,0 +1,74 @@
+planes:
+  "166":
+    battery_type: "PB345V119E-L"
+    cell_type: "INR-18650-P28A-BV"
+    configuration:
+      series_cells: 96
+      parallel_cells: 12
+      label: "96S12P"
+    voltage:
+      min_v: 260.0
+      nominal_v: 345.0
+      max_v: 402.0
+    current_limits:
+      max_discharge_a: 120.0
+      max_charge_a: 40.0
+    power_limits:
+      max_continuous_discharge_kw: 40.0
+    temperature_limits:
+      discharge_c:
+        min: 0.0
+        max: 58.0
+      charge_c:
+        min: 0.0
+        max: 45.0
+      storage_c:
+        min: 0.0
+        max: 30.0
+    rated_capacity:
+      c50_discharge_20a:
+        capacity_ah: 29.4
+        energy_kwh: 10.1
+      c23_discharge_20a:
+        capacity_ah: 29.0
+        energy_kwh: 10.0
+      c0_discharge_20a:
+        capacity_ah: 28.0
+        energy_kwh: 9.6
+
+  "192":
+    battery_type: "PB345V119E-L"
+    cell_type: "INR-18650-P28A-BV"
+    configuration:
+      series_cells: 96
+      parallel_cells: 12
+      label: "96S12P"
+    voltage:
+      min_v: 260.0
+      nominal_v: 345.0
+      max_v: 402.0
+    current_limits:
+      max_discharge_a: 120.0
+      max_charge_a: 40.0
+    power_limits:
+      max_continuous_discharge_kw: 40.0
+    temperature_limits:
+      discharge_c:
+        min: 0.0
+        max: 58.0
+      charge_c:
+        min: 0.0
+        max: 45.0
+      storage_c:
+        min: 0.0
+        max: 30.0
+    rated_capacity:
+      c50_discharge_20a:
+        capacity_ah: 29.4
+        energy_kwh: 10.1
+      c23_discharge_20a:
+        capacity_ah: 29.0
+        energy_kwh: 10.0
+      c0_discharge_20a:
+        capacity_ah: 28.0
+        energy_kwh: 9.6

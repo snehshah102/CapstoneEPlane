@@ -1,0 +1,39 @@
+{
+  "plane_id": "166",
+  "battery_type_inferred": "PB345V119E-L",
+  "capacity_est_median_ah": 26.134761607666782,
+  "capacity_est_iqr_ah": 2.1629215614582264,
+  "capacity_est_mad_ah": 1.1149506403888125,
+  "n_event_battery_samples": 261,
+  "battery_1_capacity_median_ah": 25.91796335694436,
+  "battery_2_capacity_median_ah": 26.30870002687488,
+  "vmax_median": 404.2,
+  "vp99_median": 403.9,
+  "distance_to_29ah": 2.865238392333218,
+  "distance_to_33ah": 6.865238392333218,
+  "confidence": 0.8,
+  "decision_basis": "capacity_primary_voltage_supporting",
+  "notes": "capacity_iqr_high=2.16Ah",
+  "validation_checks": [
+    {
+      "name": "synthetic_capacity_recovery",
+      "passed": true
+    },
+    {
+      "name": "startup_zero_trim",
+      "passed": true
+    },
+    {
+      "name": "decision_near_29ah",
+      "passed": true
+    },
+    {
+      "name": "decision_near_33ah",
+      "passed": true
+    }
+  ],
+  "n_charging_event_rows_loaded": 8787079,
+  "n_unique_charging_events": 303,
+  "n_valid_event_battery_segments": 261,
+  "diagnostic_plot_generated": true
+}

@@ -12,6 +12,20 @@ The flight-phase SOC-consumption table used for proxy labeling comes from:
 
 Use this table as an operational reference model (proxy), not lab-certified electrochemical truth.
 
+## Battery Type Inference
+Battery type was inferred from charging-event telemetry using a plane-level capacity proxy with top-of-charge voltage as a cross-check.
+
+- Plane `166`: inferred `PB345V119E-L`
+  - Effective-capacity median: `26.13 Ah`
+  - Confidence: `0.80`
+- Plane `192`: inferred `PB345V119E-L`
+  - Effective-capacity median: `28.74 Ah`
+  - Confidence: `0.845`
+
+Shared ML battery specs now live in:
+
+- `ml_workspace/battery_specs.yaml`
+
 ## Data Files and Column Scope
 Key raw files per flight:
 
