@@ -1,2 +1,0 @@
-"""SOH normalized workspace package."""
-
