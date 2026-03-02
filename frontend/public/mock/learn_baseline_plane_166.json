@@ -1,0 +1,27 @@
+{
+  "baseline": {
+    "planeId": "166",
+    "assumptionsVersion": "learn_assumptions_v1",
+    "baselineInputs": {
+      "ambientTempC": 21,
+      "flightDurationMin": 45,
+      "expectedPowerKw": 28,
+      "windSeverity": 35,
+      "precipitationSeverity": 20,
+      "chargeTargetSoc": 80,
+      "chargeLeadHours": 12,
+      "highSocIdleHours": 2,
+      "flightsPerWeek": 6,
+      "thermalManagementQuality": 78,
+      "cellImbalanceSeverity": 22,
+      "socEstimatorUncertainty": 18
+    },
+    "baselineOutputs": {
+      "sohImpactDelta": -0.18,
+      "healthScore": 73.95,
+      "healthLabel": "watch",
+      "rulDaysShift": -4,
+      "recommendationSummary": "Moderate mission profile. Current projected RUL is about 723 days."
+    }
+  }
+}

@@ -695,3 +695,26 @@ Cleaning note:
   - `delta_soh_raw`, `delta_soh_clean`
   - `clean_jump_flag`
   - `feature_outlier_ratio`, `invalid_ratio`
+
+## Frontend (Next.js)
+Production-grade frontend scaffold now lives in:
+
+- `frontend/`
+
+It includes:
+
+- Interactive homepage (`/`)
+- Plane index (`/planes`)
+- Per-plane dashboard (`/planes/[planeId]`)
+- Mock API routes under `frontend/app/api/v1/*`
+- Typed contracts in `frontend/lib/contracts/schemas.ts`
+- Snapshot builder script: `frontend/scripts/build_snapshots.py`
+
+Quick start:
+
+```powershell
+cd frontend
+npm install
+npm run snapshots
+npm run dev
+```

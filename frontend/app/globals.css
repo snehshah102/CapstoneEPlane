@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: 216 53% 7%;
+  --panel: 215 38% 15%;
+  --text: 210 40% 96%;
+  --muted: 214 22% 71%;
+  --accent: 189 92% 56%;
+  --warn: 36 100% 61%;
+  --ok: 154 80% 44%;
+  --risk: 0 84% 61%;
+}
+
+* {
+  border-color: rgba(148, 163, 184, 0.18);
+}
+
+body {
+  @apply bg-bg text-text antialiased;
+}
+
+.glass {
+  background: linear-gradient(
+    140deg,
+    rgba(24, 41, 63, 0.62),
+    rgba(14, 25, 42, 0.45)
+  );
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  box-shadow: 0 10px 40px rgba(3, 8, 16, 0.35);
+}
+
+.text-balance {
+  text-wrap: balance;
+}

@@ -1,0 +1,26 @@
+{
+  "planes": [
+    {
+      "planeId": "166",
+      "registration": "C-GAUW",
+      "aircraftType": "Velis Electro (EASA)",
+      "flightsCount": 206,
+      "chargingEventsCount": 321,
+      "sohCurrent": 73.949,
+      "sohTrend30": -0.023,
+      "riskBand": "medium",
+      "updatedAt": "2026-03-02T03:38:05+00:00"
+    },
+    {
+      "planeId": "192",
+      "registration": "C-GMUW",
+      "aircraftType": "Velis Electro (EASA)",
+      "flightsCount": 26,
+      "chargingEventsCount": 39,
+      "sohCurrent": 83.48,
+      "sohTrend30": -5.727,
+      "riskBand": "low",
+      "updatedAt": "2026-03-02T03:38:05+00:00"
+    }
+  ]
+}

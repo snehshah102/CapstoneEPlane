@@ -1,0 +1,42 @@
+{
+  "health": {
+    "planeId": "192",
+    "updatedAt": "2026-03-02T03:38:05+00:00",
+    "sohCurrent": 83.48,
+    "sohTrend30": -5.727,
+    "sohTrend90": -6.02,
+    "riskBand": "low",
+    "healthScore": 83.48,
+    "healthLabel": "healthy",
+    "healthExplanation": "Battery condition looks healthy for typical training operations.",
+    "metricsExplainabilityVersion": "v1",
+    "confidence": 0.88,
+    "pack": {
+      "voltage": 386.0,
+      "current": 12.0,
+      "tempAvg": 24.0,
+      "soc": 77.0
+    },
+    "lastFlight": {
+      "flightId": 11153,
+      "eventDate": "2025-07-04",
+      "route": "Kitchener/Waterloo to Kitchener/Waterloo",
+      "departureAirport": "CYKF - Kitchener/Waterloo",
+      "destinationAirport": "CYKF - Kitchener/Waterloo",
+      "durationMin": 55,
+      "eventType": "flight"
+    }
+  },
+  "prediction": {
+    "planeId": "192",
+    "forecast": {
+      "replacementDatePred": "2028-10-19",
+      "rulDaysPred": 962,
+      "rulCyclesPred": 692,
+      "confidence": 0.88
+    },
+    "sohTargetBlend": 83.615,
+    "sohProxyPoh": 84.38,
+    "sohObservedNorm": 82.68
+  }
+}
