@@ -1,114 +1,146 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, BatteryCharging, CalendarDays, Sparkles } from "lucide-react";
+import { ArrowRight, Battery, CalendarDays, Gauge } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { GlossarySection } from "@/components/ui/glossary-section";
+import { GLOSSARY_FALLBACK } from "@/lib/glossary";
+
+function ElectricPlaneVisual({ compact = false }: { compact?: boolean }) {
+  return (
+    <div
+      className={`overflow-hidden rounded-[28px] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-blue-50 shadow-glass ${compact ? "p-4" : "p-6"}`}
+    >
+      <svg viewBox="0 0 760 380" className={`${compact ? "h-52" : "h-[340px]"} w-full`}>
+        <defs>
+          <linearGradient id="hull" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#f8fbff" />
+            <stop offset="100%" stopColor="#d7e5ff" />
+          </linearGradient>
+          <linearGradient id="wing" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#6ea8ff" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#2563eb" stopOpacity="0.8" />
+          </linearGradient>
+          <linearGradient id="engine" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#1d4ed8" />
+            <stop offset="100%" stopColor="#0ea5e9" />
+          </linearGradient>
+        </defs>
+        <ellipse cx="378" cy="320" rx="262" ry="26" fill="#b8c5db" opacity="0.32" />
+        <path d="M120 224 L310 186 L567 175 L654 195 L573 212 L312 220 Z" fill="url(#wing)" />
+        <path
+          d="M162 206 C188 146, 295 116, 438 124 C520 128, 586 149, 627 184 C638 193, 638 208, 627 217 C584 248, 518 269, 434 274 C291 282, 188 248, 162 206Z"
+          fill="url(#hull)"
+        />
+        <circle cx="452" cy="201" r="31" fill="#173c78" />
+        <circle cx="452" cy="201" r="21" fill="url(#engine)" />
+        <circle cx="452" cy="201" r="9" fill="#cffafe" opacity="0.88" />
+        <path d="M245 182 L182 122 L257 165 Z" fill="#a6b3ca" />
+        <path d="M253 240 L178 295 L286 250 Z" fill="#98a9c5" />
+        <path d="M563 176 L634 133 L594 186 Z" fill="#dbe8ff" />
+        <path d="M562 222 L636 251 L593 214 Z" fill="#c7dcff" />
+        <rect x="145" y="232" width="92" height="9" rx="4.5" fill="#1e40af" opacity="0.26" />
+      </svg>
+    </div>
+  );
+}
 
 export function LandingShell() {
-  return (
-    <main className="space-y-10">
-      <section className="glass relative overflow-hidden rounded-3xl px-6 py-10 md:px-10 md:py-14">
-        <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-cyan-400/20 blur-3xl" />
-        <div className="absolute -bottom-20 right-0 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl" />
-        <div className="relative grid items-center gap-8 lg:grid-cols-2">
-          <div className="space-y-5">
-            <p className="inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-300/10 px-3 py-1 text-xs text-cyan-200">
-              <Sparkles size={14} />
-              Student Experience Demo
-            </p>
-            <h1 className="font-[var(--font-heading)] text-4xl leading-tight md:text-6xl">
-              AeroCell makes battery intelligence visible.
-            </h1>
-            <p className="max-w-xl text-sm text-slate-300 md:text-base">
-              Understand battery health, discover the best days to fly, and learn
-              what factors drive SOH through an interactive experience designed
-              for presentation day.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link href="/experience">
-                <Button className="gap-2">
-                  Start the Experience
-                  <ArrowRight size={16} />
-                </Button>
-              </Link>
-              <Link href="/learn">
-                <Button className="bg-slate-100 text-slate-900 hover:bg-white">
-                  Open Learn Simulator
-                </Button>
-              </Link>
-            </div>
-          </div>
+  const glossaryItems = GLOSSARY_FALLBACK.filter((item) =>
+    ["soh", "rul", "calendar_score", "charge_window"].includes(item.id)
+  );
 
-          <div className="rounded-2xl border border-slate-600/40 bg-slate-950/30 p-4">
-            <svg
-              viewBox="0 0 720 380"
-              className="h-[260px] w-full animate-rise-in"
-              role="img"
-              aria-label="Stylized electric plane illustration"
-            >
-              <defs>
-                <linearGradient id="planeBody" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#dbeafe" />
-                  <stop offset="100%" stopColor="#7dd3fc" />
-                </linearGradient>
-                <linearGradient id="wingGlow" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.2" />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity="0.75" />
-                </linearGradient>
-              </defs>
-              <rect x="0" y="0" width="720" height="380" fill="transparent" />
-              <ellipse cx="350" cy="300" rx="260" ry="30" fill="#0f172a" opacity="0.35" />
-              <path
-                d="M120 220 L300 190 L560 180 L640 195 L560 210 L300 220 Z"
-                fill="url(#wingGlow)"
-              />
-              <path
-                d="M160 210 C180 150, 280 120, 430 130 C500 135, 570 155, 610 185 C620 193, 620 206, 610 214 C570 244, 500 266, 430 271 C280 280, 180 252, 160 210Z"
-                fill="url(#planeBody)"
-              />
-              <circle cx="445" cy="200" r="26" fill="#0f172a" opacity="0.92" />
-              <circle cx="445" cy="200" r="17" fill="#22d3ee" opacity="0.75" />
-              <path d="M230 185 L180 130 L250 165 Z" fill="#9ca3af" />
-              <path d="M248 238 L185 285 L274 250 Z" fill="#94a3b8" />
-              <path d="M560 177 L625 138 L585 183 Z" fill="#bae6fd" />
-              <path d="M560 224 L626 251 L586 218 Z" fill="#a5f3fc" />
-            </svg>
-            <p className="mt-3 text-xs text-slate-300">
-              Powered by flight telemetry + weather-informed optimization (mock
-              today, model-ready tomorrow).
+  return (
+    <main className="space-y-20 pb-10">
+      <section className="fade-up mx-auto max-w-4xl space-y-7 pt-6 text-center md:pt-10">
+        <p className="text-sm font-medium uppercase tracking-[0.16em] text-slate-500">
+          AeroCell Platform
+        </p>
+        <h1 className="section-title text-balance text-slate-900">
+          Battery Intelligence for Electric Flight, designed for fast decisions.
+        </h1>
+        <p className="mx-auto max-w-2xl text-balance text-base leading-relaxed text-slate-600">
+          Track battery health, predict remaining useful life, and get flight-day
+          recommendations with a smooth, student-friendly interface.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Link href="/planes" prefetch={false}>
+            <Button className="gap-2">
+              Open Planes
+              <ArrowRight size={16} />
+            </Button>
+          </Link>
+          <Link href="/planes" prefetch={false}>
+            <Button className="bg-white text-slate-900 ring-1 ring-slate-300 hover:bg-slate-50">
+              Open Dashboards
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      <section className="fade-up space-y-6">
+        <ElectricPlaneVisual />
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-4">
+            <p className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
+              <Gauge size={16} className="text-blue-700" />
+              Live SOH + RUL
+            </p>
+            <p className="mt-1 text-sm text-slate-600">
+              Real-time health signals and replacement planning in one place.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-4">
+            <p className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
+              <CalendarDays size={16} className="text-blue-700" />
+              Smart Recommendations
+            </p>
+            <p className="mt-1 text-sm text-slate-600">
+              Day-level guidance for better flight and charging behavior.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-4">
+            <p className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
+              <Battery size={16} className="text-blue-700" />
+              Explainable Insights
+            </p>
+            <p className="mt-1 text-sm text-slate-600">
+              Clear definitions and rationale made for student presentations.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <Card className="space-y-3">
-          <BatteryCharging className="h-5 w-5 text-cyan-300" />
-          <h2 className="font-[var(--font-heading)] text-xl">Why SOH matters</h2>
-          <p className="text-sm text-slate-300">
-            SOH shows how close a battery is to new condition. Lower SOH means
-            less endurance and faster wear progression.
+      <section className="fade-up grid gap-6 md:grid-cols-2">
+        <ElectricPlaneVisual compact />
+        <div className="rounded-[28px] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-emerald-50 p-6 shadow-glass">
+          <h2 className="font-[var(--font-heading)] text-2xl text-slate-900">
+            Why This Platform Matters
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-slate-600">
+            Electric aircraft viability depends on battery reliability, efficient operations,
+            and confident maintenance planning. AeroCell brings those decisions into one view.
           </p>
-        </Card>
-        <Card className="space-y-3">
-          <CalendarDays className="h-5 w-5 text-emerald-300" />
-          <h2 className="font-[var(--font-heading)] text-xl">What we predict</h2>
-          <p className="text-sm text-slate-300">
-            We forecast replacement timing, remaining useful life, and
-            day-by-day flight suitability to reduce unnecessary battery stress.
-          </p>
-        </Card>
-        <Card className="space-y-3">
-          <Sparkles className="h-5 w-5 text-amber-300" />
-          <h2 className="font-[var(--font-heading)] text-xl">How to explore</h2>
-          <p className="text-sm text-slate-300">
-            Use the Experience page for guided insights, Planes for detailed
-            dashboards, and Learn to interactively test SOH factors.
-          </p>
-        </Card>
+          <div className="mt-5 grid gap-3">
+            <div className="rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700">
+              Track health trends over time to identify wear early.
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700">
+              Plan charging windows and flight days to reduce avoidable stress.
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700">
+              Translate telemetry into clear actions students and pilots can use.
+            </div>
+          </div>
+        </div>
       </section>
+
+      <GlossarySection
+        title="Core Terms"
+        subtitle="Quick definitions used across the platform."
+        items={glossaryItems}
+      />
     </main>
   );
 }

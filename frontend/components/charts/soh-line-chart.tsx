@@ -1,13 +1,9 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import ReactECharts from "echarts-for-react";
 import { useMemo } from "react";
 
 import { SohTrendPoint } from "@/lib/contracts/schemas";
-
-const ReactECharts = dynamic(() => import("echarts-for-react"), {
-  ssr: false
-});
 
 type Props = {
   points: SohTrendPoint[];
@@ -16,18 +12,19 @@ type Props = {
 export function SohLineChart({ points }: Props) {
   const option = useMemo(
     () => ({
-      textStyle: { color: "#dbeafe" },
+      animation: false,
+      textStyle: { color: "#1e293b" },
       tooltip: { trigger: "axis" },
       xAxis: {
         type: "category",
         data: points.map((item) => item.date),
-        axisLabel: { color: "#94a3b8" }
+        axisLabel: { color: "#64748b" }
       },
       yAxis: {
         type: "value",
         min: Math.max(0, Math.floor(Math.min(...points.map((x) => x.soh)) - 5)),
         max: 100,
-        axisLabel: { color: "#94a3b8" }
+        axisLabel: { color: "#64748b" }
       },
       grid: { left: 36, right: 24, top: 24, bottom: 36 },
       series: [
@@ -36,7 +33,7 @@ export function SohLineChart({ points }: Props) {
           smooth: true,
           data: points.map((item) => item.soh),
           showSymbol: false,
-          lineStyle: { width: 3, color: "#22d3ee" },
+          lineStyle: { width: 3, color: "#2563eb" },
           areaStyle: {
             color: {
               type: "linear",
@@ -45,8 +42,8 @@ export function SohLineChart({ points }: Props) {
               x2: 0,
               y2: 1,
               colorStops: [
-                { offset: 0, color: "rgba(34,211,238,0.35)" },
-                { offset: 1, color: "rgba(34,211,238,0.02)" }
+                { offset: 0, color: "rgba(37,99,235,0.3)" },
+                { offset: 1, color: "rgba(37,99,235,0.03)" }
               ]
             }
           }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { LearnBaselineResponseSchema } from "@/lib/contracts/schemas";
-import { readLearnBaselineSnapshot } from "@/lib/mock-store";
+import { readLearnBaselineSnapshot } from "@/lib/snapshot-store";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -10,3 +10,4 @@ export async function GET(request: Request) {
   const payload = LearnBaselineResponseSchema.parse(data);
   return NextResponse.json(payload);
 }
+

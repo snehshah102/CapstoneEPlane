@@ -19,11 +19,11 @@ const config: Config = {
         risk: "hsl(var(--risk))"
       },
       boxShadow: {
-        glass: "0 10px 40px rgba(4, 9, 18, 0.35)"
+        glass: "0 14px 34px rgba(15, 23, 42, 0.06)"
       },
       backgroundImage: {
         "hero-grid":
-          "radial-gradient(circle at 25% 10%, rgba(34,211,238,0.17), transparent 35%), radial-gradient(circle at 70% 5%, rgba(16,185,129,0.16), transparent 30%), linear-gradient(145deg, #060b14 0%, #0e1a2b 40%, #0b1727 100%)"
+          "radial-gradient(circle at 14% 10%, rgba(37,99,235,0.08), transparent 24%), radial-gradient(circle at 88% 12%, rgba(20,184,166,0.06), transparent 28%), linear-gradient(180deg, #f9fbff 0%, #f4f7fb 100%)"
       },
       animation: {
         "rise-in": "riseIn 0.45s ease-out both",

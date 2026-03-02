@@ -1,11 +1,16 @@
 "use client";
 
+import ReactECharts from "echarts-for-react";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { PlaneTakeoff } from "lucide-react";
 
-import { getLearnBaseline, getPlanes } from "@/lib/adapters/api-client";
+import { getGlossary, getLearnBaseline, getPlanes } from "@/lib/adapters/api-client";
 import { HealthMeter } from "@/components/ui/health-meter";
 import { Card } from "@/components/ui/card";
+import { GlossarySection } from "@/components/ui/glossary-section";
+import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { GLOSSARY_FALLBACK } from "@/lib/glossary";
 
 type ControlKey =
   | "ambientTempC"
@@ -34,7 +39,12 @@ const controlMeta: Record<
   chargeLeadHours: { label: "Charge Lead Hours", min: 0, max: 48, step: 1 },
   highSocIdleHours: { label: "High SOC Idle Hours", min: 0, max: 36, step: 1 },
   flightsPerWeek: { label: "Flights Per Week", min: 0, max: 14, step: 1 },
-  thermalManagementQuality: { label: "Thermal Management Quality", min: 0, max: 100, step: 1 },
+  thermalManagementQuality: {
+    label: "Thermal Management Quality",
+    min: 0,
+    max: 100,
+    step: 1
+  },
   cellImbalanceSeverity: { label: "Cell Imbalance Severity", min: 0, max: 100, step: 1 },
   socEstimatorUncertainty: { label: "SOC Estimator Uncertainty", min: 0, max: 100, step: 1 }
 };
@@ -61,6 +71,10 @@ export function LearnSimulator() {
   const baselineQuery = useQuery({
     queryKey: ["learn-baseline", planeId],
     queryFn: () => getLearnBaseline(planeId)
+  });
+  const glossaryQuery = useQuery({
+    queryKey: ["glossary"],
+    queryFn: getGlossary
   });
 
   const baselineInputs = baselineQuery.data?.baseline.baselineInputs;
@@ -107,6 +121,15 @@ export function LearnSimulator() {
     );
     const label = healthLabel(score);
     const rulShift = Number((-totalPenalty * 6).toFixed(1));
+    const expectedRangeKm = Number(
+      Math.max(
+        55,
+        250 *
+          (score / 100) *
+          (currentInputs.chargeTargetSoc / 100) *
+          (1 - currentInputs.windSeverity / 280)
+      ).toFixed(1)
+    );
 
     return {
       sohImpactDelta,
@@ -114,6 +137,7 @@ export function LearnSimulator() {
       healthLabel: label,
       healthExplanation: labelExplanation(label),
       rulDaysShift: rulShift,
+      expectedRangeKm,
       recommendationSummary:
         label === "healthy"
           ? "Profile is battery-friendly. Keep this operation plan."
@@ -123,28 +147,72 @@ export function LearnSimulator() {
     };
   }, [baselineInputs, baselineOutputs, currentInputs]);
 
+  const trajectoryOption = useMemo(() => {
+    if (!computed || !baselineOutputs) return null;
+    const x = Array.from({ length: 12 }, (_, i) => `W${i + 1}`);
+    const baseline = x.map(() => Number(baselineOutputs.healthScore.toFixed(1)));
+    const simulated = x.map((_, i) =>
+      Number(Math.max(0, computed.healthScore + computed.sohImpactDelta * (i * 0.5)).toFixed(1))
+    );
+    return {
+      animation: false,
+      tooltip: { trigger: "axis" },
+      legend: { data: ["Baseline", "Simulated"], textStyle: { color: "#475569" } },
+      xAxis: { type: "category", data: x, axisLabel: { color: "#64748b" } },
+      yAxis: {
+        type: "value",
+        min: 0,
+        max: 100,
+        axisLabel: { color: "#64748b" }
+      },
+      grid: { left: 36, right: 16, top: 34, bottom: 30 },
+      series: [
+        {
+          name: "Baseline",
+          type: "line",
+          smooth: true,
+          data: baseline,
+          lineStyle: { color: "#94a3b8", width: 2 }
+        },
+        {
+          name: "Simulated",
+          type: "line",
+          smooth: true,
+          data: simulated,
+          lineStyle: { color: "#2563eb", width: 3 },
+          areaStyle: { color: "rgba(37,99,235,0.12)" }
+        }
+      ]
+    };
+  }, [baselineOutputs, computed]);
+
   if (planesQuery.isLoading || baselineQuery.isLoading || !currentInputs || !computed) {
-    return <div className="text-sm text-slate-300">Loading learn simulator...</div>;
+    return <div className="text-sm text-muted">Loading learn simulator...</div>;
   }
   if (planesQuery.isError || baselineQuery.isError || !baselineQuery.data) {
-    return <div className="text-sm text-rose-300">Learn simulator data unavailable.</div>;
+    return <div className="text-sm text-rose-600">Learn simulator data unavailable.</div>;
   }
+
+  const glossaryItems = (glossaryQuery.data?.items ?? GLOSSARY_FALLBACK).filter(
+    (item) => ["soh", "rul", "risk", "confidence"].includes(item.id)
+  );
+  const planeProgress = Math.max(8, Math.min(100, (computed.expectedRangeKm / 250) * 100));
 
   return (
     <main className="space-y-6">
       <section>
-        <h1 className="font-[var(--font-heading)] text-3xl">Learn: What drives SOH?</h1>
-        <p className="text-sm text-slate-300">
-          Toggle factors and see how projected battery wear and health state change in real time.
+        <h1 className="section-title text-slate-900">Learn: What Drives SOH?</h1>
+        <p className="text-sm text-muted">
+          Adjust operations and environment factors to see immediate changes in projected SOH and RUL.
         </p>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <Card className="space-y-4">
           <div className="flex items-center justify-between">
-            <p className="font-semibold text-slate-100">Simulation Inputs</p>
+            <p className="font-semibold text-slate-900">Simulation Inputs</p>
             <div className="flex items-center gap-2">
-              <label className="text-xs text-slate-300">
+              <label className="text-xs text-muted">
                 Plane{" "}
                 <select
                   value={planeId}
@@ -152,7 +220,7 @@ export function LearnSimulator() {
                     setPlaneId(event.target.value);
                     setInputs(null);
                   }}
-                  className="ml-1 rounded-md border border-slate-600/40 bg-slate-950/40 px-2 py-1"
+                  className="ml-1 rounded-md border border-stone-300 bg-white px-2 py-1 text-slate-900"
                 >
                   {planesQuery.data?.planes.map((plane) => (
                     <option key={plane.planeId} value={plane.planeId}>
@@ -164,7 +232,7 @@ export function LearnSimulator() {
               <button
                 type="button"
                 onClick={() => setInputs({ ...baselineQuery.data!.baseline.baselineInputs })}
-                className="rounded-md border border-slate-500/40 px-2 py-1 text-xs text-slate-200"
+                className="rounded-md border border-stone-300 bg-white px-2 py-1 text-xs text-slate-700"
               >
                 Reset to Baseline
               </button>
@@ -175,8 +243,8 @@ export function LearnSimulator() {
               const meta = controlMeta[key];
               const value = Number(currentInputs[key]);
               return (
-                <div key={key} className="rounded-lg border border-slate-600/35 p-3">
-                  <label className="text-xs text-slate-300">{meta.label}</label>
+                <div key={key} className="rounded-xl border border-stone-200 bg-white/75 p-3">
+                  <label className="text-xs text-muted">{meta.label}</label>
                   <input
                     type="range"
                     min={meta.min}
@@ -189,9 +257,9 @@ export function LearnSimulator() {
                         [key]: Number(event.target.value)
                       }))
                     }
-                    className="mt-2 w-full"
+                    className="mt-2 w-full accent-blue-600"
                   />
-                  <p className="text-sm font-semibold text-cyan-200">{value.toFixed(0)}</p>
+                  <p className="text-sm font-semibold text-blue-700">{value.toFixed(0)}</p>
                 </div>
               );
             })}
@@ -199,37 +267,76 @@ export function LearnSimulator() {
         </Card>
 
         <Card className="space-y-4">
-          <p className="font-semibold text-slate-100">Simulation Outputs</p>
+          <div className="flex items-center justify-between">
+            <p className="font-semibold text-slate-900">Simulation Outputs</p>
+            <InfoTooltip
+              term="Simulation outputs"
+              plainLanguage="These are live model outputs that react to your selected inputs."
+              whyItMatters="Students can see which factors move SOH and RUL most."
+            />
+          </div>
           <HealthMeter
             score={computed.healthScore}
             label={computed.healthLabel}
             explanation={computed.healthExplanation}
           />
           <div className="grid gap-2 text-sm">
-            <p className="rounded-lg border border-slate-600/35 p-2">
-              Predicted SOH Impact Delta:{" "}
-              <span className="font-semibold">{computed.sohImpactDelta}</span>
+            <p className="rounded-xl border border-stone-200 bg-stone-50 p-2">
+              Predicted SOH Delta: <span className="font-semibold">{computed.sohImpactDelta}</span>
             </p>
-            <p className="rounded-lg border border-slate-600/35 p-2">
-              RUL Shift (days): <span className="font-semibold">{computed.rulDaysShift}</span>
+            <p className="rounded-xl border border-stone-200 bg-stone-50 p-2">
+              RUL Shift: <span className="font-semibold">{computed.rulDaysShift} days</span>
             </p>
-            <p className="rounded-lg border border-slate-600/35 p-2">
-              Recommendation:{" "}
+            <p className="rounded-xl border border-stone-200 bg-stone-50 p-2">
+              Recommended action:{" "}
               <span className="font-semibold">{computed.recommendationSummary}</span>
             </p>
           </div>
-          <details className="rounded-lg border border-slate-600/35 p-3 text-sm">
-            <summary className="cursor-pointer font-semibold text-slate-100">
+
+          <div className="rounded-2xl border border-blue-100 bg-blue-50/65 p-4">
+            <p className="text-xs uppercase tracking-wide text-muted">Mock Mission Reach</p>
+            <p className="text-2xl font-semibold text-slate-900">
+              {computed.expectedRangeKm} km estimated range
+            </p>
+            <div className="relative mt-3 h-10 rounded-full bg-white">
+              <div className="absolute left-3 top-1/2 h-[2px] w-[calc(100%-24px)] -translate-y-1/2 bg-stone-200" />
+              <PlaneTakeoff
+                className="absolute top-1/2 -translate-y-1/2 text-blue-700 transition-all duration-500"
+                size={18}
+                style={{ left: `calc(${planeProgress}% - 9px)` }}
+              />
+            </div>
+          </div>
+        </Card>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
+        <Card>
+          <p className="mb-2 font-[var(--font-heading)] text-xl text-slate-900">
+            SOH Projection Trajectory
+          </p>
+          {trajectoryOption ? (
+            <ReactECharts option={trajectoryOption} style={{ height: 260, width: "100%" }} />
+          ) : null}
+        </Card>
+        <Card>
+          <details className="rounded-xl border border-stone-200 bg-white/80 p-3 text-sm">
+            <summary className="cursor-pointer font-semibold text-slate-900">
               Show model assumptions
             </summary>
-            <p className="mt-2 text-xs text-slate-300">
-              This simulator uses transparent mock weighting to demonstrate how
-              operations, weather, and charging behavior can influence projected SOH and RUL.
-              It is intentionally educational and model-ready for future backend replacement.
+            <p className="mt-2 text-xs text-muted">
+              This simulator uses transparent weighting to show how operations,
+              weather, and charging behavior influence projected SOH and RUL.
             </p>
           </details>
         </Card>
       </section>
+
+      <GlossarySection
+        title="Learn Page Glossary"
+        subtitle="Definitions for simulation terms."
+        items={glossaryItems}
+      />
     </main>
   );
 }

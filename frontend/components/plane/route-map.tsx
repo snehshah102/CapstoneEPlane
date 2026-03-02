@@ -18,7 +18,7 @@ const RouteMapCanvas = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[280px] items-center justify-center rounded-xl border border-slate-600/30 text-sm text-slate-300">
+      <div className="flex h-[280px] items-center justify-center rounded-xl border border-stone-200 text-sm text-muted">
         Loading route map...
       </div>
     )

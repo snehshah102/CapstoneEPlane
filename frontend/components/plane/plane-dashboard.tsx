@@ -3,11 +3,18 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { addMonths, endOfMonth, formatISO, startOfMonth } from "date-fns";
-import { BatteryMedium, CalendarClock, Gauge, Sparkles } from "lucide-react";
+import {
+  BatteryMedium,
+  CalendarClock,
+  Gauge,
+  Sparkles,
+  TrendingUp,
+  Zap
+} from "lucide-react";
 
 import {
+  getChargingCost,
   getGlossary,
-  getPlaneFlights,
   getPlaneHealth,
   getPlanePrediction,
   getPlaneRecommendations,
@@ -15,13 +22,13 @@ import {
   getWeather
 } from "@/lib/adapters/api-client";
 import { airportFromLabel } from "@/lib/airports";
+import { RangeEnduranceChart } from "@/components/charts/range-endurance-chart";
 import { SohLineChart } from "@/components/charts/soh-line-chart";
-import { WearScatterChart } from "@/components/charts/wear-scatter-chart";
 import { RecommendationCalendar } from "@/components/plane/recommendation-calendar";
 import { RouteMap } from "@/components/plane/route-map";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { GlossaryDrawer } from "@/components/ui/glossary-drawer";
+import { GlossarySection } from "@/components/ui/glossary-section";
 import { HealthMeter } from "@/components/ui/health-meter";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { GLOSSARY_FALLBACK } from "@/lib/glossary";
@@ -53,22 +60,16 @@ type Props = {
 
 export function PlaneDashboard({ planeId }: Props) {
   const [month, setMonth] = useState(monthString(new Date()));
-  const [selectedGlossaryId, setSelectedGlossaryId] = useState<string | null>(
-    "risk"
-  );
   const options = useMemo(() => monthOptions(), []);
 
   const healthQuery = useQuery({
     queryKey: ["plane-health", planeId],
-    queryFn: () => getPlaneHealth(planeId)
+    queryFn: () => getPlaneHealth(planeId),
+    refetchInterval: 45_000
   });
   const trendQuery = useQuery({
     queryKey: ["plane-trend", planeId, "90d"],
     queryFn: () => getPlaneTrend(planeId, "90d")
-  });
-  const flightsQuery = useQuery({
-    queryKey: ["plane-flights", planeId],
-    queryFn: () => getPlaneFlights(planeId, 20)
   });
   const predictionQuery = useQuery({
     queryKey: ["plane-prediction", planeId],
@@ -91,184 +92,177 @@ export function PlaneDashboard({ planeId }: Props) {
     queryFn: () => getWeather(airportCode, start, end)
   });
 
+  const chargingQuery = useQuery({
+    queryKey: ["plane-charging", planeId, airportCode],
+    queryFn: () =>
+      getChargingCost(airportCode, new Date().toISOString().slice(0, 10), 52),
+    enabled: Boolean(airportCode)
+  });
+
   if (
     healthQuery.isLoading ||
     trendQuery.isLoading ||
-    flightsQuery.isLoading ||
     predictionQuery.isLoading ||
     recsQuery.isLoading
   ) {
-    return <div className="text-sm text-slate-300">Loading plane dashboard...</div>;
+    return <div className="text-sm text-muted">Loading plane dashboard...</div>;
   }
 
   if (
     healthQuery.isError ||
     trendQuery.isError ||
-    flightsQuery.isError ||
     predictionQuery.isError ||
     recsQuery.isError ||
     !healthQuery.data ||
     !trendQuery.data ||
-    !flightsQuery.data ||
     !predictionQuery.data ||
     !recsQuery.data
   ) {
-    return <div className="text-sm text-rose-300">Unable to load full plane snapshot data.</div>;
+    return <div className="text-sm text-rose-600">Unable to load plane snapshot data.</div>;
   }
 
-  const glossaryItems = glossaryQuery.data?.items ?? GLOSSARY_FALLBACK;
+  const glossaryItems = (glossaryQuery.data?.items ?? GLOSSARY_FALLBACK).filter(
+    (item) =>
+      ["soh", "rul", "confidence", "calendar_score", "charge_window"].includes(
+        item.id
+      )
+  );
   const { health } = healthQuery.data;
   const { prediction } = predictionQuery.data;
-  const flights = flightsQuery.data.flights;
   const recommendations = recsQuery.data.recommendations;
   const departure = airportFromLabel(health.lastFlight.departureAirport);
   const destination = airportFromLabel(health.lastFlight.destinationAirport);
-
-  const trendSummary =
-    health.sohTrend30 < 0
-      ? "SOH is trending downward (normal aging behavior)."
-      : "SOH trend is stable or improving in this window.";
+  const topDay = recommendations.flightDayScores[0];
+  const chargingEstimate = chargingQuery.data?.estimate;
 
   return (
-    <main className="space-y-5 pb-28">
-      <section>
+    <main className="space-y-6">
+      <section className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="font-[var(--font-heading)] text-3xl">Plane {planeId} Dashboard</h1>
-            <p className="text-sm text-slate-300">
-              Updated {new Date(health.updatedAt).toLocaleString()} | Live polling
-              every 45s
+            <h1 className="section-title text-slate-900">Plane {planeId} Dashboard</h1>
+            <p className="text-sm text-muted">
+              Updated {new Date(health.updatedAt).toLocaleString()} | Polling every 45s
             </p>
           </div>
-          <p className="rounded-full border border-slate-500/40 bg-slate-900/40 px-3 py-1 text-xs text-slate-200">
-            Friendly mode: student-ready explanations enabled
-          </p>
+          <Badge
+            tone={
+              health.healthLabel === "healthy"
+                ? "ok"
+                : health.healthLabel === "watch"
+                  ? "warn"
+                  : "risk"
+            }
+          >
+            {health.healthLabel}
+          </Badge>
         </div>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card className="space-y-3">
-          <HealthMeter
-            score={health.healthScore}
-            label={health.healthLabel}
-            explanation={health.healthExplanation}
-          />
-          <p className="text-xs text-slate-400">
-            This replaces ambiguous risk colors with a plain-language meter.
+      <section className="grid gap-4 lg:grid-cols-2">
+        <Card className="space-y-3 border-blue-200 bg-gradient-to-br from-blue-50 via-white to-blue-100/50">
+          <p className="text-xs uppercase tracking-wide text-muted">
+            Primary Metric: SOH{" "}
+            <InfoTooltip
+              term="SOH"
+              plainLanguage="Battery condition compared to a new battery."
+              whyItMatters="SOH is a leading indicator for endurance and maintenance timing."
+            />
           </p>
+          <p className="font-[var(--font-heading)] text-6xl text-slate-900">
+            {formatPct(health.sohCurrent)}
+          </p>
+          <div className="h-2 overflow-hidden rounded-full bg-blue-100">
+            <div
+              className="h-full rounded-full bg-blue-600 transition-all duration-700"
+              style={{ width: `${Math.max(0, Math.min(100, health.sohCurrent))}%` }}
+            />
+          </div>
+          <p className="text-sm text-muted">
+            30d: {health.sohTrend30.toFixed(2)} pts | 90d: {health.sohTrend90.toFixed(2)} pts
+          </p>
+          <div className="pt-2">
+            <HealthMeter
+              score={health.healthScore}
+              label={health.healthLabel}
+              explanation={health.healthExplanation}
+            />
+          </div>
         </Card>
-        <Card className="space-y-2">
-          <p className="text-xs uppercase tracking-wide text-slate-400">How to read key numbers</p>
-          <p className="text-sm text-slate-300">
-            `SOH` is current battery condition, `Trend pts` shows direction over
-            time, and `Confidence` indicates how reliable a model result is.
+
+        <Card className="space-y-3 border-stone-200 bg-gradient-to-br from-amber-50 via-white to-blue-50">
+          <p className="text-xs uppercase tracking-wide text-muted">
+            Primary Metric: RUL{" "}
+            <InfoTooltip
+              term="Remaining Useful Life (RUL)"
+              plainLanguage="Estimated days and cycles before replacement is advised."
+              whyItMatters="RUL helps plan service windows before disruption."
+            />
           </p>
-          <button
-            type="button"
-            onClick={() => setSelectedGlossaryId("soh")}
-            className="rounded-lg border border-slate-600/30 px-3 py-2 text-left text-xs text-slate-300"
-          >
-            Open glossary focus: SOH
-          </button>
+          <p className="font-[var(--font-heading)] text-6xl text-slate-900">
+            {prediction.forecast.rulCyclesPred}
+          </p>
+          <p className="text-xl font-semibold text-slate-900">estimated flights remaining</p>
+          <p className="text-sm text-muted">
+            Confidence {prediction.forecast.confidence.toFixed(2)}
+          </p>
         </Card>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card
-          className="space-y-1 cursor-pointer"
-          onClick={() => setSelectedGlossaryId("soh")}
-        >
-          <p className="text-xs uppercase tracking-wide text-slate-400">
-            Current SOH{" "}
-            <InfoTooltip
-              term="SOH"
-              plainLanguage="Battery health compared to when it was new."
-              whyItMatters="Lower SOH typically means less usable endurance."
-            />
-          </p>
-          <p className="text-2xl font-semibold">{formatPct(health.sohCurrent)}</p>
-          <p className="text-xs text-slate-400">
-            Blend target confidence {health.confidence.toFixed(2)}
-          </p>
-        </Card>
-        <Card
-          className="space-y-1 cursor-pointer"
-          onClick={() => setSelectedGlossaryId("trend_points")}
-        >
-          <p className="text-xs uppercase tracking-wide text-slate-400">
-            SOH Trend{" "}
-            <InfoTooltip
-              term="Trend Points"
-              plainLanguage="How SOH changed over the selected period."
-              whyItMatters="Negative values mean wear is progressing."
-            />
-          </p>
-          <p className="text-2xl font-semibold">
-            {health.sohTrend30.toFixed(2)} / {health.sohTrend90.toFixed(2)}
-          </p>
-          <p className="text-xs text-slate-400">30d / 90d change (pts)</p>
-          <p className="text-xs text-cyan-200">{trendSummary}</p>
-        </Card>
-        <Card
-          className="space-y-1 cursor-pointer"
-          onClick={() => setSelectedGlossaryId("confidence")}
-        >
-          <p className="text-xs uppercase tracking-wide text-slate-400">
-            Replacement Date{" "}
-            <InfoTooltip
-              term="Replacement Forecast"
-              plainLanguage="Estimated date when replacement becomes recommended."
-              whyItMatters="Supports maintenance planning before battery stress becomes critical."
-            />
-          </p>
-          <p className="text-2xl font-semibold">
+        <Card className="space-y-2">
+          <p className="text-xs uppercase tracking-wide text-muted">Replacement Date</p>
+          <p className="text-2xl font-semibold text-slate-900">
             {new Date(prediction.forecast.replacementDatePred).toLocaleDateString()}
           </p>
-          <p className="text-xs text-slate-400">
-            Model confidence {prediction.forecast.confidence.toFixed(2)}
+        </Card>
+        <Card className="space-y-2">
+          <p className="text-xs uppercase tracking-wide text-muted">Current Charge</p>
+          <p className="text-2xl font-semibold text-slate-900">
+            {health.currentChargeSoc.toFixed(1)}%
           </p>
         </Card>
-        <Card
-          className="space-y-1 cursor-pointer"
-          onClick={() => setSelectedGlossaryId("rul")}
-        >
-          <p className="text-xs uppercase tracking-wide text-slate-400">
-            Remaining Useful Life{" "}
-            <InfoTooltip
-              term="RUL"
-              plainLanguage="Estimated battery life left in days and cycles."
-              whyItMatters="Helps avoid last-minute operational disruptions."
-            />
+        <Card className="space-y-2">
+          <p className="text-xs uppercase tracking-wide text-muted">Time Since Last Flight</p>
+          <p className="text-2xl font-semibold text-slate-900">
+            {health.timeSinceLastFlightHours}h
           </p>
-          <p className="text-2xl font-semibold">
-            {prediction.forecast.rulDaysPred}d / {prediction.forecast.rulCyclesPred} cycles
+        </Card>
+        <Card className="space-y-2">
+          <p className="inline-flex items-center gap-1 text-xs uppercase tracking-wide text-muted">
+            <Zap size={12} />
+            Charging Cost
           </p>
-          <p className="text-xs text-slate-400">Predicted through wear trajectory model</p>
+          <p className="text-2xl font-semibold text-slate-900">
+            ${chargingEstimate?.estimatedSessionCostUsd.toFixed(2) ?? "--"}
+          </p>
+          <p className="text-xs text-muted">
+            {airportCode} {chargingEstimate ? `(${chargingEstimate.sourceMode})` : ""}
+          </p>
         </Card>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1fr_1fr_1fr]">
         <Card>
           <div className="mb-3 flex items-center gap-2">
-            <Gauge className="h-4 w-4 text-cyan-300" />
-            <h2 className="font-[var(--font-heading)] text-lg">Live Battery Health</h2>
+            <Gauge className="h-4 w-4 text-blue-700" />
+            <h2 className="font-[var(--font-heading)] text-lg text-slate-900">Live Battery Health</h2>
           </div>
-          <p className="mb-3 text-xs text-slate-400">Subtitle: live telemetry for current pack condition.</p>
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid grid-cols-2 gap-3 text-sm text-slate-800">
             <div>
-              <p className="text-slate-400">Pack Voltage</p>
+              <p className="text-muted">Pack Voltage</p>
               <p className="font-semibold">{health.pack.voltage.toFixed(1)} V</p>
             </div>
             <div>
-              <p className="text-slate-400">Pack Current</p>
+              <p className="text-muted">Pack Current</p>
               <p className="font-semibold">{health.pack.current.toFixed(1)} A</p>
             </div>
             <div>
-              <p className="text-slate-400">Pack Temp Avg</p>
+              <p className="text-muted">Pack Temp Avg</p>
               <p className="font-semibold">{health.pack.tempAvg.toFixed(1)} C</p>
             </div>
             <div>
-              <p className="text-slate-400">Pack SOC</p>
+              <p className="text-muted">Pack SOC</p>
               <p className="font-semibold">{health.pack.soc.toFixed(1)}%</p>
             </div>
           </div>
@@ -276,11 +270,10 @@ export function PlaneDashboard({ planeId }: Props) {
 
         <Card>
           <div className="mb-3 flex items-center gap-2">
-            <BatteryMedium className="h-4 w-4 text-emerald-300" />
-            <h2 className="font-[var(--font-heading)] text-lg">Last Flight Summary</h2>
+            <CalendarClock className="h-4 w-4 text-blue-700" />
+            <h2 className="font-[var(--font-heading)] text-lg text-slate-900">Last Flight Snapshot</h2>
           </div>
-          <p className="mb-3 text-xs text-slate-400">Subtitle: context from the most recent flight event.</p>
-          <div className="space-y-2 text-sm">
+          <div className="space-y-2 text-sm text-slate-800">
             <p>
               Flight ID: <span className="font-semibold">{health.lastFlight.flightId}</span>
             </p>
@@ -302,21 +295,28 @@ export function PlaneDashboard({ planeId }: Props) {
 
         <Card>
           <div className="mb-3 flex items-center gap-2">
-            <CalendarClock className="h-4 w-4 text-amber-300" />
-            <h2 className="font-[var(--font-heading)] text-lg">Forecast Snapshot</h2>
+            <BatteryMedium className="h-4 w-4 text-blue-700" />
+            <h2 className="font-[var(--font-heading)] text-lg text-slate-900">Charging Cost Meaning</h2>
           </div>
-          <p className="mb-3 text-xs text-slate-400">Subtitle: model label sources and blended target.</p>
-          <div className="space-y-3 text-sm">
+          <div className="space-y-2 text-sm text-slate-800">
             <p>
-              SOH Proxy: <span className="font-semibold">{prediction.sohProxyPoh.toFixed(2)}%</span>
+              Session total:{" "}
+              <span className="font-semibold">
+                ${chargingEstimate?.estimatedSessionCostUsd.toFixed(2) ?? "--"}
+              </span>
             </p>
             <p>
-              SOH Observed Norm:{" "}
-              <span className="font-semibold">{prediction.sohObservedNorm.toFixed(2)}%</span>
+              Energy amount:{" "}
+              <span className="font-semibold">{chargingEstimate?.energyKwh ?? 52} kWh</span>
             </p>
             <p>
-              SOH Blend Target:{" "}
-              <span className="font-semibold">{prediction.sohTargetBlend.toFixed(2)}%</span>
+              Unit electricity rate:{" "}
+              <span className="font-semibold">
+                ${chargingEstimate?.costPerKwhUsd.toFixed(3) ?? "--"} per kWh
+              </span>
+            </p>
+            <p className="text-xs text-muted">
+              This estimate is for one recommended charging session, not monthly total.
             </p>
           </div>
         </Card>
@@ -324,30 +324,40 @@ export function PlaneDashboard({ planeId }: Props) {
 
       <section className="grid gap-4 xl:grid-cols-2">
         <Card>
-          <h2 className="mb-1 font-[var(--font-heading)] text-lg">SOH History (90d)</h2>
-          <p className="mb-3 text-xs text-slate-400">Subtitle: trend of battery health over recent flights.</p>
+          <h2 className="mb-1 font-[var(--font-heading)] text-lg text-slate-900">
+            SOH History (90d)
+          </h2>
+          <p className="mb-3 text-xs text-muted">
+            This trend line will be replaced by your backend model series later.
+          </p>
           <SohLineChart points={trendQuery.data.points} />
         </Card>
         <Card>
-          <h2 className="mb-1 font-[var(--font-heading)] text-lg">Charging vs Flight Wear</h2>
-          <p className="mb-3 text-xs text-slate-400">Subtitle: relationship between mission profile and wear score.</p>
-          <WearScatterChart flights={flights} />
+          <h2 className="mb-1 font-[var(--font-heading)] text-lg text-slate-900">
+            Range & Endurance Forecast
+          </h2>
+          <p className="mb-3 text-xs text-muted">
+            Estimated mission range/endurance sensitivity across charge levels.
+          </p>
+          <RangeEnduranceChart sohCurrent={health.sohCurrent} />
         </Card>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+      <section className="grid gap-4 xl:grid-cols-[1.35fr_0.65fr]">
         <Card className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-cyan-300" />
-              <h2 className="font-[var(--font-heading)] text-lg">Flight Recommendation System</h2>
+              <Sparkles className="h-4 w-4 text-blue-700" />
+              <h2 className="font-[var(--font-heading)] text-lg text-slate-900">
+                Flight Recommendations
+              </h2>
             </div>
-            <label className="text-sm text-slate-300">
+            <label className="text-sm text-muted">
               Month{" "}
               <select
                 value={month}
                 onChange={(event) => setMonth(event.target.value)}
-                className="ml-2 rounded-lg border border-slate-600/50 bg-slate-950/50 px-2 py-1"
+                className="ml-2 rounded-lg border border-stone-300 bg-white px-2 py-1 text-slate-900"
               >
                 {options.map((option) => (
                   <option key={option} value={option}>
@@ -358,95 +368,43 @@ export function PlaneDashboard({ planeId }: Props) {
             </label>
           </div>
 
-          <div className="space-y-2 rounded-xl border border-slate-600/35 bg-slate-950/25 p-3 text-sm">
-            <h3 className="font-semibold text-slate-100">Why this month is scored this way</h3>
-            <p className="text-xs text-slate-300">
-              Scores blend weather suitability, thermal stress, projected battery stress,
-              and charging timing effects. Click a calendar day to inspect these factors.
-            </p>
-          </div>
-
-          <div className="space-y-2 rounded-xl border border-slate-600/35 bg-slate-950/25 p-3">
-            <h3 className="font-semibold text-slate-100">Best days to fly</h3>
-            <p className="text-xs text-slate-400">
-              Top-ranked days for lower expected battery wear.
-            </p>
-            <div className="grid gap-2 md:grid-cols-2">
-              {recommendations.flightDayScores.slice(0, 6).map((day) => (
-                <button
-                  type="button"
-                  key={day.date}
-                  onClick={() => setSelectedGlossaryId("calendar_score")}
-                  className="rounded-lg border border-slate-600/30 p-3 text-left text-sm"
-                >
-                  <div className="flex items-center justify-between">
-                    <p>{day.date}</p>
-                    <Badge
-                      tone={
-                        day.confidenceTier === "high"
-                          ? "ok"
-                          : day.confidenceTier === "medium"
-                            ? "warn"
-                            : "risk"
-                      }
-                    >
-                      {day.confidenceTier}
-                    </Badge>
-                  </div>
-                  <p className="mt-1 font-semibold text-cyan-200">Score {day.score.toFixed(1)}</p>
-                  <p className="text-xs text-slate-400">{day.weatherSummary}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div
-            className="space-y-2 rounded-xl border border-slate-600/35 bg-slate-950/25 p-3"
-            onClick={() => setSelectedGlossaryId("calendar_score")}
-          >
-            <h3 className="font-semibold text-slate-100">Calendar view: every day of the month</h3>
-            <p className="text-xs text-slate-400">
-              Click any date to see score breakdown, confidence, and battery-friendly guidance.
-            </p>
-            <RecommendationCalendar
-              days={recommendations.calendarDays}
-              breakdownByDate={recommendations.scoreBreakdownByDate}
-            />
-          </div>
-
-          <div
-            className="space-y-2 rounded-xl border border-slate-600/35 bg-slate-950/25 p-3"
-            onClick={() => setSelectedGlossaryId("charge_window")}
-          >
-            <h3 className="font-semibold text-slate-100">Charge timing to reduce wear</h3>
-            <p className="text-xs text-slate-400">
-              Keep high SOC idle time short by charging closer to departure.
-            </p>
-            <div className="grid gap-3 md:grid-cols-2">
-              {recommendations.chargePlan.map((plan) => (
-                <div
-                  key={`${plan.date}-${plan.chargeWindowStart}`}
-                  className="rounded-lg border border-emerald-500/25 bg-emerald-900/10 p-3 text-sm"
-                >
-                  <p className="font-semibold text-emerald-200">{plan.date}</p>
-                  <p>Target SOC: {plan.targetSoc}%</p>
-                  <p>
-                    Charge window: {plan.chargeWindowStart} - {plan.chargeWindowEnd}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-300">{plan.rationale}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          <RecommendationCalendar
+            days={recommendations.calendarDays}
+            breakdownByDate={recommendations.scoreBreakdownByDate}
+            chargePlan={recommendations.chargePlan}
+          />
         </Card>
 
         <Card className="space-y-4">
-          <h2 className="font-[var(--font-heading)] text-lg">Route + Weather Context</h2>
-          {weatherQuery.data?.demoMode ? (
-            <div className="rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
-              Demo mode active: using fallback-modeled weather for reliability.
+          <h3 className="font-[var(--font-heading)] text-lg text-slate-900">
+            Recommendation Highlights
+          </h3>
+          {topDay ? (
+            <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-3 text-sm">
+              <p className="text-muted">Best current day</p>
+              <p className="font-semibold text-slate-900">{topDay.date}</p>
+              <p className="text-blue-700">Score {topDay.score.toFixed(1)}</p>
             </div>
           ) : null}
+          <div className="space-y-2">
+            {recommendations.cards.map((card) => (
+              <div key={card.id} className="rounded-xl border border-stone-200 bg-white/85 p-3 text-sm">
+                <p className="font-semibold text-slate-900">{card.action}</p>
+                <p className="text-xs text-muted">Confidence {card.confidence.toFixed(2)}</p>
+                <ul className="mt-2 space-y-1 text-xs text-slate-700">
+                  {card.why.slice(0, 2).map((line) => (
+                    <li key={line}>- {line}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+        <Card className="space-y-4">
+          <h2 className="font-[var(--font-heading)] text-lg text-slate-900">Route Context</h2>
           <RouteMap
             departure={
               departure
@@ -459,15 +417,26 @@ export function PlaneDashboard({ planeId }: Props) {
                 : null
             }
           />
-          <div className="space-y-2 text-sm">
-            <p className="text-slate-300">
-              Weather runway ({airportCode}) | Source mode:{" "}
-              <span className="font-semibold capitalize">
-                {weatherQuery.data?.mode ?? "unknown"}
-              </span>
-            </p>
+        </Card>
+        <Card className="space-y-3">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-blue-700" />
+            <h2 className="font-[var(--font-heading)] text-lg text-slate-900">Weather + Cost Signal</h2>
+          </div>
+          {weatherQuery.data?.demoMode ? (
+            <div className="rounded-lg border border-amber-300 bg-amber-100 px-3 py-2 text-xs text-amber-700">
+              Extended forecast estimation active. Recommendations remain available.
+            </div>
+          ) : null}
+          <p className="text-sm text-muted">
+            Source mode: <span className="font-semibold capitalize">{weatherQuery.data?.mode}</span>
+          </p>
+          <div className="space-y-2">
             {weatherQuery.data?.days.slice(0, 5).map((day) => (
-              <div key={day.date} className="flex items-center justify-between rounded-lg border border-slate-600/30 px-3 py-2 text-xs">
+              <div
+                key={day.date}
+                className="flex items-center justify-between rounded-lg border border-stone-200 px-3 py-2 text-xs text-slate-800"
+              >
                 <span>{day.date}</span>
                 <span>
                   {day.tempMinC.toFixed(0)}-{day.tempMaxC.toFixed(0)}C
@@ -487,13 +456,18 @@ export function PlaneDashboard({ planeId }: Props) {
               </div>
             ))}
           </div>
+          <p className="text-xs text-muted">
+            Estimated charging session: $
+            {chargingEstimate?.estimatedSessionCostUsd.toFixed(2) ?? "--"} for{" "}
+            {chargingEstimate?.energyKwh ?? 52} kWh.
+          </p>
         </Card>
       </section>
 
-      <GlossaryDrawer
+      <GlossarySection
+        title="Dashboard Glossary"
+        subtitle="Key metrics used on this page."
         items={glossaryItems}
-        selectedId={selectedGlossaryId}
-        title="Pinned Glossary"
       />
     </main>
   );

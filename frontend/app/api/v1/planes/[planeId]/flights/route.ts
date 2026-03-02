@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { FlightsResponseSchema } from "@/lib/contracts/schemas";
-import { readPlaneFlightsSnapshot } from "@/lib/mock-store";
+import { readPlaneFlightsSnapshot } from "@/lib/snapshot-store";
 
 export async function GET(
   request: Request,
@@ -19,3 +19,4 @@ export async function GET(
 
   return NextResponse.json(payload);
 }
+

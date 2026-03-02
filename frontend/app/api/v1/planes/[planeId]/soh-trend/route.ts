@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { subDays } from "date-fns";
 
 import { SohTrendResponseSchema } from "@/lib/contracts/schemas";
-import { readPlaneTrendSnapshot } from "@/lib/mock-store";
+import { readPlaneTrendSnapshot } from "@/lib/snapshot-store";
 
 const WINDOW_DAYS: Record<"30d" | "90d" | "1y", number> = {
   "30d": 30,
@@ -34,3 +34,4 @@ export async function GET(
 
   return NextResponse.json(payload);
 }
+

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
 import Link from "next/link";
 
+import { ChunkReloadGuard } from "@/components/providers/chunk-reload-guard";
 import { QueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
 
@@ -35,31 +36,30 @@ export default function RootLayout({
     <html lang="en" className={`${headingFont.variable} ${bodyFont.variable}`}>
       <body className="min-h-screen bg-hero-grid font-[var(--font-body)]">
         <QueryProvider>
-          <div className="mx-auto max-w-[1320px] px-4 pb-12 pt-6 md:px-8">
-            <header className="glass mb-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-5 py-4">
-              <div>
+          <ChunkReloadGuard />
+          <div className="mx-auto max-w-[1240px] px-5 pb-16 pt-5 md:px-8">
+            <header className="mb-12 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
+              <div className="space-y-0.5">
                 <Link
                   href="/"
-                  className="font-[var(--font-heading)] text-xl tracking-wide"
+                  prefetch={false}
+                  className="font-[var(--font-heading)] text-xl tracking-tight text-slate-900"
                 >
                   AeroCell
                 </Link>
-                <p className="text-xs text-slate-300">
+                <p className="text-xs text-muted">
                   Unlocking Battery Intelligence for Next-Generation Electric
                   Aviation
                 </p>
               </div>
-              <nav className="flex items-center gap-4 text-sm text-muted">
-                <Link href="/" className="transition hover:text-text">
+              <nav className="flex items-center gap-6 text-sm text-slate-600">
+                <Link href="/" prefetch={false} className="transition hover:text-slate-900">
                   Home
                 </Link>
-                <Link href="/experience" className="transition hover:text-text">
-                  Experience
-                </Link>
-                <Link href="/planes" className="transition hover:text-text">
+                <Link href="/planes" prefetch={false} className="transition hover:text-slate-900">
                   Planes
                 </Link>
-                <Link href="/learn" className="transition hover:text-text">
+                <Link href="/learn" prefetch={false} className="transition hover:text-slate-900">
                   Learn
                 </Link>
               </nav>

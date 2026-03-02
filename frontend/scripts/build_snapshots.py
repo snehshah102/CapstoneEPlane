@@ -623,7 +623,7 @@ def build_snapshots(data_dir: Path, out_dir: Path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Build frontend mock snapshots from parquet data.")
+    parser = argparse.ArgumentParser(description="Build frontend snapshots from parquet data.")
     parser.add_argument(
         "--data-dir",
         default="../data",
@@ -631,7 +631,7 @@ def main():
     )
     parser.add_argument(
         "--out-dir",
-        default="public/mock",
+        default="public/snapshots",
         help="Output directory for frontend JSON snapshots",
     )
     args = parser.parse_args()

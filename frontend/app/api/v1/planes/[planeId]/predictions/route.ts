@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { PredictionsResponseSchema } from "@/lib/contracts/schemas";
-import { readPlaneKpisSnapshot } from "@/lib/mock-store";
+import { readPlaneKpisSnapshot } from "@/lib/snapshot-store";
 
 export async function GET(
   _request: Request,
@@ -12,3 +12,4 @@ export async function GET(
   const payload = PredictionsResponseSchema.parse({ prediction: data.prediction });
   return NextResponse.json(payload);
 }
+

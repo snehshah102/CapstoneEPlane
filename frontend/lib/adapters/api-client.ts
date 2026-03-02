@@ -1,4 +1,5 @@
 import {
+  ChargingCostResponseSchema,
   FlightsResponseSchema,
   GlossaryResponseSchema,
   LearnBaselineResponseSchema,
@@ -76,5 +77,12 @@ export function getLearnBaseline(planeId: string) {
   return fetchAndParse(
     `/api/v1/learn/baseline?planeId=${planeId}`,
     LearnBaselineResponseSchema
+  );
+}
+
+export function getChargingCost(airport: string, date: string, energyKwh: number) {
+  return fetchAndParse(
+    `/api/v1/charging-cost?airport=${airport}&date=${date}&energyKwh=${energyKwh}`,
+    ChargingCostResponseSchema
   );
 }

@@ -1,0 +1,492 @@
+{
+  "recommendations": {
+    "planeId": "166",
+    "month": "2026-06",
+    "generatedAt": "2026-03-02T03:38:05+00:00",
+    "flightDayScores": [
+      {
+        "date": "2026-06-14",
+        "score": 68.62,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-15",
+        "score": 67.97,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-03",
+        "score": 67.84,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-04",
+        "score": 67.75,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-02",
+        "score": 66.14,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-30",
+        "score": 66.02,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-16",
+        "score": 65.9,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-13",
+        "score": 65.39,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-05",
+        "score": 65.17,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-01",
+        "score": 64.54,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      }
+    ],
+    "calendarDays": [
+      {
+        "date": "2026-06-01",
+        "score": 64.54,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-02",
+        "score": 66.14,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-03",
+        "score": 67.84,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-04",
+        "score": 67.75,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-05",
+        "score": 65.17,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-06",
+        "score": 62.15,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-07",
+        "score": 59.96,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-08",
+        "score": 58.65,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-09",
+        "score": 58.26,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-10",
+        "score": 58.78,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-11",
+        "score": 60.18,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-12",
+        "score": 62.41,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-13",
+        "score": 65.39,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-14",
+        "score": 68.62,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-15",
+        "score": 67.97,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-16",
+        "score": 65.9,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-17",
+        "score": 63.9,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-18",
+        "score": 62.14,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-19",
+        "score": 60.72,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-20",
+        "score": 59.71,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-21",
+        "score": 59.18,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-22",
+        "score": 59.19,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-23",
+        "score": 58.81,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-24",
+        "score": 58.42,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-25",
+        "score": 58.55,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-26",
+        "score": 59.2,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-27",
+        "score": 60.34,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-28",
+        "score": 61.92,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-29",
+        "score": 63.89,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      },
+      {
+        "date": "2026-06-30",
+        "score": 66.02,
+        "confidenceTier": "low",
+        "weatherSummary": "Battery-friendly flight window"
+      }
+    ],
+    "scoreBreakdownByDate": {
+      "2026-06-01": {
+        "weather": 86.69,
+        "thermal": 80.8,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-02": {
+        "weather": 84.73,
+        "thermal": 88.53,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-03": {
+        "weather": 83.19,
+        "thermal": 95.94,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-04": {
+        "weather": 82.12,
+        "thermal": 97.26,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-05": {
+        "weather": 80.88,
+        "thermal": 91.37,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-06": {
+        "weather": 78.03,
+        "thermal": 86.61,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-07": {
+        "weather": 75.93,
+        "thermal": 83.19,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-08": {
+        "weather": 74.61,
+        "thermal": 81.24,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-09": {
+        "weather": 74.09,
+        "thermal": 80.85,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-10": {
+        "weather": 74.34,
+        "thermal": 82.03,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-11": {
+        "weather": 75.35,
+        "thermal": 84.72,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-12": {
+        "weather": 77.07,
+        "thermal": 88.83,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-13": {
+        "weather": 79.45,
+        "thermal": 94.19,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-14": {
+        "weather": 82.41,
+        "thermal": 99.44,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-15": {
+        "weather": 85.87,
+        "thermal": 92.3,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-16": {
+        "weather": 86.81,
+        "thermal": 84.68,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-17": {
+        "weather": 87.99,
+        "thermal": 76.92,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-18": {
+        "weather": 89.55,
+        "thermal": 69.3,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-19": {
+        "weather": 91.46,
+        "thermal": 62.16,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-20": {
+        "weather": 93.69,
+        "thermal": 55.79,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-21": {
+        "weather": 96.2,
+        "thermal": 50.43,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-22": {
+        "weather": 98.96,
+        "thermal": 46.32,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-23": {
+        "weather": 100.0,
+        "thermal": 43.63,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-24": {
+        "weather": 100.0,
+        "thermal": 42.45,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-25": {
+        "weather": 100.0,
+        "thermal": 42.84,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-26": {
+        "weather": 100.0,
+        "thermal": 44.79,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-27": {
+        "weather": 100.0,
+        "thermal": 48.21,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-28": {
+        "weather": 100.0,
+        "thermal": 52.97,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-29": {
+        "weather": 100.0,
+        "thermal": 58.86,
+        "stress": 98.0,
+        "charging": 28.0
+      },
+      "2026-06-30": {
+        "weather": 99.73,
+        "thermal": 65.66,
+        "stress": 98.0,
+        "charging": 28.0
+      }
+    },
+    "learnAssumptionsRef": "learn_assumptions_v1",
+    "chargePlan": [
+      {
+        "date": "2026-06-14",
+        "targetSoc": 80,
+        "chargeWindowStart": "2026-06-13T18:30:00Z",
+        "chargeWindowEnd": "2026-06-13T21:15:00Z",
+        "rationale": "Minimize high-SOC idle time while preserving departure buffer."
+      },
+      {
+        "date": "2026-06-15",
+        "targetSoc": 80,
+        "chargeWindowStart": "2026-06-14T18:30:00Z",
+        "chargeWindowEnd": "2026-06-14T21:15:00Z",
+        "rationale": "Minimize high-SOC idle time while preserving departure buffer."
+      },
+      {
+        "date": "2026-06-03",
+        "targetSoc": 80,
+        "chargeWindowStart": "2026-06-02T18:30:00Z",
+        "chargeWindowEnd": "2026-06-02T21:15:00Z",
+        "rationale": "Minimize high-SOC idle time while preserving departure buffer."
+      }
+    ],
+    "cards": [
+      {
+        "id": "timing-best-days",
+        "type": "timing",
+        "action": "Fly on top-scoring days with stable temperature and low wind.",
+        "confidence": 0.82,
+        "why": [
+          "Lower thermal spread expected",
+          "Reduced projected climb stress",
+          "Weather volatility inside acceptable band"
+        ]
+      },
+      {
+        "id": "charge-window",
+        "type": "charging",
+        "action": "Charge to 80% the evening before departure, not days early.",
+        "confidence": 0.88,
+        "why": [
+          "High SOC storage accelerates degradation",
+          "Shorter dwell near high voltage",
+          "Health-preserving default for repetitive sorties"
+        ]
+      },
+      {
+        "id": "avoid-idle-full",
+        "type": "dont",
+        "action": "Avoid parking above 95% SOC overnight unless operationally required.",
+        "confidence": 0.84,
+        "why": [
+          "Reduces cumulative calendar wear",
+          "Protects cell balancing margin",
+          "Improves long-run SOH stability"
+        ]
+      }
+    ]
+  }
+}

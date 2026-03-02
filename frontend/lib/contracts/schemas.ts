@@ -4,6 +4,7 @@ export const RiskBandSchema = z.enum(["low", "medium", "high"]);
 export const ConfidenceTierSchema = z.enum(["high", "medium", "low"]);
 export const HealthLabelSchema = z.enum(["healthy", "watch", "critical"]);
 export const WeatherModeSchema = z.enum(["live", "mixed", "fallback"]);
+export const ChargingCostSourceModeSchema = z.enum(["live", "fallback"]);
 
 export const PlaneSummarySchema = z.object({
   planeId: z.string(),
@@ -23,6 +24,8 @@ export const PlaneLiveHealthSchema = z.object({
   sohCurrent: z.number(),
   sohTrend30: z.number(),
   sohTrend90: z.number(),
+  currentChargeSoc: z.number(),
+  timeSinceLastFlightHours: z.number(),
   riskBand: RiskBandSchema,
   healthScore: z.number(),
   healthLabel: HealthLabelSchema,
@@ -183,6 +186,16 @@ export const LearnBaselineSchema = z.object({
   baselineOutputs: LearnOutputsSchema
 });
 
+export const ChargingCostEstimateSchema = z.object({
+  airport: z.string(),
+  state: z.string(),
+  costPerKwhUsd: z.number(),
+  estimatedSessionCostUsd: z.number(),
+  energyKwh: z.number(),
+  sourceMode: ChargingCostSourceModeSchema,
+  generatedAt: z.string()
+});
+
 export const PlanesResponseSchema = z.object({
   planes: z.array(PlaneSummarySchema)
 });
@@ -214,6 +227,10 @@ export const LearnBaselineResponseSchema = z.object({
   baseline: LearnBaselineSchema
 });
 
+export const ChargingCostResponseSchema = z.object({
+  estimate: ChargingCostEstimateSchema
+});
+
 export type PlaneSummary = z.infer<typeof PlaneSummarySchema>;
 export type PlaneLiveHealth = z.infer<typeof PlaneLiveHealthSchema>;
 export type SohTrendPoint = z.infer<typeof SohTrendPointSchema>;
@@ -230,3 +247,4 @@ export type GlossaryItem = z.infer<typeof GlossaryItemSchema>;
 export type LearnInputs = z.infer<typeof LearnInputsSchema>;
 export type LearnOutputs = z.infer<typeof LearnOutputsSchema>;
 export type LearnBaseline = z.infer<typeof LearnBaselineSchema>;
+export type ChargingCostEstimate = z.infer<typeof ChargingCostEstimateSchema>;

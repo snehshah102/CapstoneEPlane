@@ -1,0 +1,51 @@
+{
+  "version": "v1",
+  "items": [
+    {
+      "id": "soh",
+      "term": "State of Health (SOH)",
+      "plainLanguage": "How healthy the battery is compared to when it was new.",
+      "whyItMatters": "Lower SOH means reduced flight endurance and faster aging risk.",
+      "technicalDetail": "SOH is represented as a percentage relative to nominal new-pack capacity."
+    },
+    {
+      "id": "trend_points",
+      "term": "Trend Points",
+      "plainLanguage": "The change in SOH over time, shown in points.",
+      "whyItMatters": "Negative values mean battery health is dropping.",
+      "technicalDetail": "Trend is computed as current SOH minus SOH at the selected lookback window."
+    },
+    {
+      "id": "confidence",
+      "term": "Confidence",
+      "plainLanguage": "How certain the model is about the recommendation.",
+      "whyItMatters": "Higher confidence means the suggestion is more reliable.",
+      "technicalDetail": "Confidence combines fit quality, agreement between labels, and stability indicators."
+    },
+    {
+      "id": "rul",
+      "term": "Remaining Useful Life (RUL)",
+      "plainLanguage": "Estimated time and cycles before battery replacement is recommended.",
+      "whyItMatters": "Helps planning maintenance and avoiding last-minute downtime."
+    },
+    {
+      "id": "risk",
+      "term": "Battery Health Meter",
+      "plainLanguage": "A student-friendly view of battery condition: Healthy, Watch, or Critical.",
+      "whyItMatters": "Shows when to keep normal operations versus reduce stress and plan replacement."
+    },
+    {
+      "id": "calendar_score",
+      "term": "Flight Day Score",
+      "plainLanguage": "How favorable each day is for battery-friendly operations.",
+      "whyItMatters": "Higher scores generally mean lower expected wear.",
+      "technicalDetail": "Score blends weather, thermal stress, battery condition, and charging timing effects."
+    },
+    {
+      "id": "charge_window",
+      "term": "Charge Window",
+      "plainLanguage": "Recommended time to charge before a planned flight.",
+      "whyItMatters": "Charging too early and leaving high SOC can increase wear."
+    }
+  ]
+}

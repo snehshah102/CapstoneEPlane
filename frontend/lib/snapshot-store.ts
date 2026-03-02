@@ -1,10 +1,10 @@
 import { promises as fs } from "fs";
 import path from "path";
 
-const MOCK_DIR = path.join(process.cwd(), "public", "mock");
+const SNAPSHOT_DIR = path.join(process.cwd(), "public", "snapshots");
 
 async function readJson<T>(filename: string): Promise<T> {
-  const fullPath = path.join(MOCK_DIR, filename);
+  const fullPath = path.join(SNAPSHOT_DIR, filename);
   const raw = await fs.readFile(fullPath, "utf8");
   return JSON.parse(raw) as T;
 }
@@ -37,7 +37,7 @@ export async function readPlaneRecommendationsSnapshot(
 ) {
   const normalizedMonth = month.replace("-", "_");
   const preferred = path.join(
-    MOCK_DIR,
+    SNAPSHOT_DIR,
     `plane_${planeId}_recommendations_${normalizedMonth}.json`
   );
 
@@ -45,7 +45,7 @@ export async function readPlaneRecommendationsSnapshot(
     const raw = await fs.readFile(preferred, "utf8");
     return JSON.parse(raw) as { recommendations: unknown };
   } catch {
-    const entries = await fs.readdir(MOCK_DIR);
+    const entries = await fs.readdir(SNAPSHOT_DIR);
     const fallbackFile = entries.find(
       (file) =>
         file.startsWith(`plane_${planeId}_recommendations_`) &&
@@ -63,12 +63,12 @@ export async function readGlossarySnapshot() {
 }
 
 export async function readLearnBaselineSnapshot(planeId: string) {
-  const preferred = path.join(MOCK_DIR, `learn_baseline_plane_${planeId}.json`);
+  const preferred = path.join(SNAPSHOT_DIR, `learn_baseline_plane_${planeId}.json`);
   try {
     const raw = await fs.readFile(preferred, "utf8");
     return JSON.parse(raw) as { baseline: unknown };
   } catch {
-    const entries = await fs.readdir(MOCK_DIR);
+    const entries = await fs.readdir(SNAPSHOT_DIR);
     const fallbackFile = entries.find(
       (file) =>
         file.startsWith("learn_baseline_plane_") && file.endsWith(".json")

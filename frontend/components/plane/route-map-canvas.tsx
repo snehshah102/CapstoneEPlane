@@ -102,12 +102,12 @@ export function RouteMapCanvas({ departure, destination }: Props) {
         .addTo(overlays);
     }
     if (polyline.length > 1) {
-      L.polyline(polyline, { color: "#22d3ee", weight: 4 }).addTo(overlays);
+      L.polyline(polyline, { color: "#2563eb", weight: 4 }).addTo(overlays);
     }
   }, [center, departure, destination, polyline]);
 
   return (
-    <div className="h-[280px] overflow-hidden rounded-xl border border-slate-600/30">
+    <div className="h-[280px] overflow-hidden rounded-xl border border-stone-200">
       <div ref={mapHostRef} className="h-full w-full" />
     </div>
   );

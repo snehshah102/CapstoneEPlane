@@ -1,0 +1,135 @@
+{
+  "planeId": "192",
+  "points": [
+    {
+      "date": "2025-06-03",
+      "soh": 89.5,
+      "source": "proxy"
+    },
+    {
+      "date": "2025-06-03",
+      "soh": 89.355,
+      "source": "blend"
+    },
+    {
+      "date": "2025-06-03",
+      "soh": 89.207,
+      "source": "blend"
+    },
+    {
+      "date": "2025-06-06",
+      "soh": 89.053,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2025-06-08",
+      "soh": 88.892,
+      "source": "blend"
+    },
+    {
+      "date": "2025-06-08",
+      "soh": 88.72,
+      "source": "blend"
+    },
+    {
+      "date": "2025-06-10",
+      "soh": 88.536,
+      "source": "blend"
+    },
+    {
+      "date": "2025-06-12",
+      "soh": 88.339,
+      "source": "proxy"
+    },
+    {
+      "date": "2025-06-13",
+      "soh": 88.127,
+      "source": "blend"
+    },
+    {
+      "date": "2025-06-13",
+      "soh": 87.901,
+      "source": "blend"
+    },
+    {
+      "date": "2025-06-13",
+      "soh": 87.659,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2025-06-14",
+      "soh": 87.404,
+      "source": "blend"
+    },
+    {
+      "date": "2025-06-20",
+      "soh": 87.135,
+      "source": "blend"
+    },
+    {
+      "date": "2025-06-20",
+      "soh": 86.855,
+      "source": "blend"
+    },
+    {
+      "date": "2025-06-20",
+      "soh": 86.565,
+      "source": "proxy"
+    },
+    {
+      "date": "2025-06-24",
+      "soh": 86.269,
+      "source": "blend"
+    },
+    {
+      "date": "2025-06-25",
+      "soh": 85.967,
+      "source": "blend"
+    },
+    {
+      "date": "2025-06-25",
+      "soh": 85.664,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2025-07-01",
+      "soh": 85.362,
+      "source": "blend"
+    },
+    {
+      "date": "2025-07-01",
+      "soh": 85.064,
+      "source": "blend"
+    },
+    {
+      "date": "2025-07-02",
+      "soh": 84.772,
+      "source": "blend"
+    },
+    {
+      "date": "2025-07-02",
+      "soh": 84.489,
+      "source": "proxy"
+    },
+    {
+      "date": "2025-07-03",
+      "soh": 84.216,
+      "source": "blend"
+    },
+    {
+      "date": "2025-07-03",
+      "soh": 83.957,
+      "source": "blend"
+    },
+    {
+      "date": "2025-07-04",
+      "soh": 83.711,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2025-07-04",
+      "soh": 83.48,
+      "source": "blend"
+    }
+  ]
+}

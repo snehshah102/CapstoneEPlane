@@ -3,35 +3,82 @@
 @tailwind utilities;
 
 :root {
-  --bg: 216 53% 7%;
-  --panel: 215 38% 15%;
-  --text: 210 40% 96%;
-  --muted: 214 22% 71%;
-  --accent: 189 92% 56%;
-  --warn: 36 100% 61%;
-  --ok: 154 80% 44%;
-  --risk: 0 84% 61%;
+  --bg: 220 30% 98%;
+  --panel: 0 0% 100%;
+  --text: 220 18% 12%;
+  --muted: 220 10% 40%;
+  --accent: 216 90% 48%;
+  --warn: 37 95% 46%;
+  --ok: 154 62% 35%;
+  --risk: 8 74% 49%;
+  --stroke: 220 16% 86%;
 }
 
 * {
-  border-color: rgba(148, 163, 184, 0.18);
+  border-color: hsl(var(--stroke) / 0.5);
 }
 
 body {
   @apply bg-bg text-text antialiased;
+  background-image:
+    radial-gradient(circle at 8% 8%, rgba(37, 99, 235, 0.06), transparent 22%),
+    radial-gradient(circle at 92% 12%, rgba(15, 118, 110, 0.04), transparent 26%),
+    linear-gradient(180deg, #f9fbff 0%, #f4f7fb 100%);
 }
 
 .glass {
-  background: linear-gradient(
-    140deg,
-    rgba(24, 41, 63, 0.62),
-    rgba(14, 25, 42, 0.45)
-  );
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  box-shadow: 0 10px 40px rgba(3, 8, 16, 0.35);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(251, 253, 255, 0.95));
+  backdrop-filter: blur(6px);
+  border: 1px solid hsl(var(--stroke));
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
 }
 
 .text-balance {
   text-wrap: balance;
+}
+
+.section-title {
+  @apply font-[var(--font-heading)] text-4xl tracking-tight md:text-5xl;
+}
+
+.fade-up {
+  animation: fadeUp 0.5s ease-out both;
+}
+
+.plane-rotate {
+  transform-style: preserve-3d;
+  animation: planeOrbit 10s ease-in-out infinite;
+}
+
+.plane-rotate-paused {
+  animation-play-state: paused;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes planeOrbit {
+  0% {
+    transform: perspective(1200px) rotateY(-12deg);
+  }
+  25% {
+    transform: perspective(1200px) rotateY(10deg);
+  }
+  50% {
+    transform: perspective(1200px) rotateY(0deg);
+  }
+  75% {
+    transform: perspective(1200px) rotateY(-9deg);
+  }
+  100% {
+    transform: perspective(1200px) rotateY(-12deg);
+  }
 }

@@ -1,7 +1,7 @@
 # AeroCell Frontend
 
 Student-facing Next.js 15 application for battery SOH analytics, recommendation guidance,
-and explainable learning interactions.
+charging-cost estimation, and explainable learning interactions.
 
 ## Commands
 
@@ -10,18 +10,17 @@ npm install
 npm run snapshots
 npm run dev
 npm run build
-npm run test:e2e
-npm run test:e2e:full
+npm run lint
 ```
 
 ## Snapshot Pipeline
 
-Builds typed mock JSON from parquet sources:
+Builds typed JSON snapshots from parquet sources:
 
 - `../data/event_manifest.parquet`
 - `../data/event_timeseries.parquet`
 
-Output files are created in `public/mock/` and consumed by `/api/v1/*` route handlers.
+Output files are created in `public/snapshots/` and consumed by `/api/v1/*` route handlers.
 
 New generated artifacts include:
 
@@ -38,6 +37,7 @@ New generated artifacts include:
 - `GET /api/v1/planes/:planeId/predictions`
 - `GET /api/v1/planes/:planeId/recommendations?month=YYYY-MM`
 - `GET /api/v1/weather?airport=ICAO&start=YYYY-MM-DD&end=YYYY-MM-DD`
+- `GET /api/v1/charging-cost?airport=ICAO&date=YYYY-MM-DD&energyKwh=number`
 - `GET /api/v1/glossary`
 - `GET /api/v1/learn/baseline?planeId=...`
 
@@ -46,7 +46,6 @@ All responses are validated with Zod schemas in `lib/contracts/schemas.ts`.
 ## Route Map
 
 - `/` cinematic landing page
-- `/experience` guided overview
 - `/planes` fleet list
 - `/planes/[planeId]` detailed plane dashboard
 - `/learn` interactive SOH factor simulator
@@ -66,5 +65,5 @@ All responses are validated with Zod schemas in `lib/contracts/schemas.ts`.
 
 ## Testing Note
 
-- `npm run test:e2e` is intentionally lightweight (skips full Playwright run) for rapid frontend iteration.
-- Run `npm run test:e2e:full` when you want the complete end-to-end suite.
+- Fast iteration policy for this phase: use `npm run lint` + `npm run build`.
+- `npm run test:e2e` remains lightweight and intentionally skipped by default.

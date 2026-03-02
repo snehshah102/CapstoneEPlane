@@ -1,0 +1,1035 @@
+{
+  "planeId": "166",
+  "points": [
+    {
+      "date": "2023-06-03",
+      "soh": 88.0,
+      "source": "proxy"
+    },
+    {
+      "date": "2023-06-04",
+      "soh": 88.009,
+      "source": "blend"
+    },
+    {
+      "date": "2023-06-09",
+      "soh": 88.014,
+      "source": "blend"
+    },
+    {
+      "date": "2023-06-11",
+      "soh": 88.015,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2023-06-21",
+      "soh": 88.007,
+      "source": "blend"
+    },
+    {
+      "date": "2023-06-29",
+      "soh": 87.989,
+      "source": "blend"
+    },
+    {
+      "date": "2023-07-05",
+      "soh": 87.959,
+      "source": "blend"
+    },
+    {
+      "date": "2023-07-11",
+      "soh": 87.915,
+      "source": "proxy"
+    },
+    {
+      "date": "2023-07-20",
+      "soh": 87.857,
+      "source": "blend"
+    },
+    {
+      "date": "2023-07-22",
+      "soh": 87.784,
+      "source": "blend"
+    },
+    {
+      "date": "2023-07-22",
+      "soh": 87.697,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2023-07-30",
+      "soh": 87.595,
+      "source": "blend"
+    },
+    {
+      "date": "2023-08-01",
+      "soh": 87.48,
+      "source": "blend"
+    },
+    {
+      "date": "2023-08-02",
+      "soh": 87.354,
+      "source": "blend"
+    },
+    {
+      "date": "2023-08-03",
+      "soh": 87.218,
+      "source": "proxy"
+    },
+    {
+      "date": "2023-08-04",
+      "soh": 87.075,
+      "source": "blend"
+    },
+    {
+      "date": "2023-08-06",
+      "soh": 86.928,
+      "source": "blend"
+    },
+    {
+      "date": "2023-08-22",
+      "soh": 86.778,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2023-08-22",
+      "soh": 86.63,
+      "source": "blend"
+    },
+    {
+      "date": "2023-08-27",
+      "soh": 86.485,
+      "source": "blend"
+    },
+    {
+      "date": "2023-08-28",
+      "soh": 86.347,
+      "source": "blend"
+    },
+    {
+      "date": "2023-08-31",
+      "soh": 86.218,
+      "source": "proxy"
+    },
+    {
+      "date": "2023-09-04",
+      "soh": 86.099,
+      "source": "blend"
+    },
+    {
+      "date": "2023-09-06",
+      "soh": 85.993,
+      "source": "blend"
+    },
+    {
+      "date": "2023-09-11",
+      "soh": 85.901,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2023-09-13",
+      "soh": 85.824,
+      "source": "blend"
+    },
+    {
+      "date": "2023-09-14",
+      "soh": 85.761,
+      "source": "blend"
+    },
+    {
+      "date": "2023-09-15",
+      "soh": 85.714,
+      "source": "blend"
+    },
+    {
+      "date": "2023-09-15",
+      "soh": 85.68,
+      "source": "proxy"
+    },
+    {
+      "date": "2023-09-18",
+      "soh": 85.658,
+      "source": "blend"
+    },
+    {
+      "date": "2023-09-19",
+      "soh": 85.648,
+      "source": "blend"
+    },
+    {
+      "date": "2023-09-21",
+      "soh": 85.646,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2023-09-22",
+      "soh": 85.65,
+      "source": "blend"
+    },
+    {
+      "date": "2023-09-24",
+      "soh": 85.658,
+      "source": "blend"
+    },
+    {
+      "date": "2023-09-25",
+      "soh": 85.667,
+      "source": "blend"
+    },
+    {
+      "date": "2023-09-25",
+      "soh": 85.674,
+      "source": "proxy"
+    },
+    {
+      "date": "2023-09-27",
+      "soh": 85.676,
+      "source": "blend"
+    },
+    {
+      "date": "2023-09-27",
+      "soh": 85.671,
+      "source": "blend"
+    },
+    {
+      "date": "2023-09-28",
+      "soh": 85.656,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2023-09-28",
+      "soh": 85.63,
+      "source": "blend"
+    },
+    {
+      "date": "2023-09-28",
+      "soh": 85.591,
+      "source": "blend"
+    },
+    {
+      "date": "2023-09-29",
+      "soh": 85.537,
+      "source": "blend"
+    },
+    {
+      "date": "2023-09-29",
+      "soh": 85.469,
+      "source": "proxy"
+    },
+    {
+      "date": "2023-09-30",
+      "soh": 85.385,
+      "source": "blend"
+    },
+    {
+      "date": "2023-09-30",
+      "soh": 85.288,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-01",
+      "soh": 85.177,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2023-10-10",
+      "soh": 85.054,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-11",
+      "soh": 84.921,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-11",
+      "soh": 84.779,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-11",
+      "soh": 84.633,
+      "source": "proxy"
+    },
+    {
+      "date": "2023-10-11",
+      "soh": 84.484,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-12",
+      "soh": 84.335,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-12",
+      "soh": 84.189,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2023-10-12",
+      "soh": 84.049,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-14",
+      "soh": 83.916,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-16",
+      "soh": 83.794,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-17",
+      "soh": 83.684,
+      "source": "proxy"
+    },
+    {
+      "date": "2023-10-17",
+      "soh": 83.588,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-17",
+      "soh": 83.506,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-18",
+      "soh": 83.44,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2023-10-18",
+      "soh": 83.387,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-18",
+      "soh": 83.349,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-19",
+      "soh": 83.324,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-19",
+      "soh": 83.311,
+      "source": "proxy"
+    },
+    {
+      "date": "2023-10-19",
+      "soh": 83.306,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-23",
+      "soh": 83.309,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-23",
+      "soh": 83.316,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2023-10-23",
+      "soh": 83.325,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-24",
+      "soh": 83.333,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-24",
+      "soh": 83.337,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-26",
+      "soh": 83.334,
+      "source": "proxy"
+    },
+    {
+      "date": "2023-10-26",
+      "soh": 83.323,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-26",
+      "soh": 83.3,
+      "source": "blend"
+    },
+    {
+      "date": "2023-10-27",
+      "soh": 83.265,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2023-10-31",
+      "soh": 83.216,
+      "source": "blend"
+    },
+    {
+      "date": "2023-11-04",
+      "soh": 83.152,
+      "source": "blend"
+    },
+    {
+      "date": "2023-11-04",
+      "soh": 83.073,
+      "source": "blend"
+    },
+    {
+      "date": "2023-11-06",
+      "soh": 82.979,
+      "source": "proxy"
+    },
+    {
+      "date": "2023-11-06",
+      "soh": 82.872,
+      "source": "blend"
+    },
+    {
+      "date": "2023-11-16",
+      "soh": 82.753,
+      "source": "blend"
+    },
+    {
+      "date": "2023-12-15",
+      "soh": 82.622,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2023-12-16",
+      "soh": 82.483,
+      "source": "blend"
+    },
+    {
+      "date": "2024-04-07",
+      "soh": 82.338,
+      "source": "blend"
+    },
+    {
+      "date": "2024-04-07",
+      "soh": 82.19,
+      "source": "blend"
+    },
+    {
+      "date": "2024-04-08",
+      "soh": 82.04,
+      "source": "proxy"
+    },
+    {
+      "date": "2024-04-10",
+      "soh": 81.893,
+      "source": "blend"
+    },
+    {
+      "date": "2024-04-10",
+      "soh": 81.751,
+      "source": "blend"
+    },
+    {
+      "date": "2024-04-15",
+      "soh": 81.616,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2024-04-16",
+      "soh": 81.491,
+      "source": "blend"
+    },
+    {
+      "date": "2024-04-16",
+      "soh": 81.377,
+      "source": "blend"
+    },
+    {
+      "date": "2024-04-16",
+      "soh": 81.277,
+      "source": "blend"
+    },
+    {
+      "date": "2024-04-16",
+      "soh": 81.19,
+      "source": "proxy"
+    },
+    {
+      "date": "2024-04-20",
+      "soh": 81.119,
+      "source": "blend"
+    },
+    {
+      "date": "2024-04-24",
+      "soh": 81.062,
+      "source": "blend"
+    },
+    {
+      "date": "2024-04-24",
+      "soh": 81.02,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2024-04-24",
+      "soh": 80.991,
+      "source": "blend"
+    },
+    {
+      "date": "2024-04-25",
+      "soh": 80.975,
+      "source": "blend"
+    },
+    {
+      "date": "2024-04-25",
+      "soh": 80.968,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-02",
+      "soh": 80.969,
+      "source": "proxy"
+    },
+    {
+      "date": "2024-05-02",
+      "soh": 80.975,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-02",
+      "soh": 80.983,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-04",
+      "soh": 80.992,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2024-05-04",
+      "soh": 80.997,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-04",
+      "soh": 80.997,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-04",
+      "soh": 80.988,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-04",
+      "soh": 80.969,
+      "source": "proxy"
+    },
+    {
+      "date": "2024-05-04",
+      "soh": 80.938,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-07",
+      "soh": 80.893,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-07",
+      "soh": 80.833,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2024-05-07",
+      "soh": 80.759,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-07",
+      "soh": 80.67,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-09",
+      "soh": 80.567,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-09",
+      "soh": 80.451,
+      "source": "proxy"
+    },
+    {
+      "date": "2024-05-09",
+      "soh": 80.323,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-09",
+      "soh": 80.187,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-10",
+      "soh": 80.043,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2024-05-10",
+      "soh": 79.895,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-10",
+      "soh": 79.746,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-14",
+      "soh": 79.598,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-14",
+      "soh": 79.454,
+      "source": "proxy"
+    },
+    {
+      "date": "2024-05-14",
+      "soh": 79.316,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-14",
+      "soh": 79.188,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-14",
+      "soh": 79.071,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2024-05-14",
+      "soh": 78.966,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-15",
+      "soh": 78.876,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-15",
+      "soh": 78.8,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-15",
+      "soh": 78.739,
+      "source": "proxy"
+    },
+    {
+      "date": "2024-05-15",
+      "soh": 78.692,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-16",
+      "soh": 78.66,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-16",
+      "soh": 78.639,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2024-05-16",
+      "soh": 78.63,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-16",
+      "soh": 78.628,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-16",
+      "soh": 78.633,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-17",
+      "soh": 78.641,
+      "source": "proxy"
+    },
+    {
+      "date": "2024-05-17",
+      "soh": 78.65,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-18",
+      "soh": 78.657,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-21",
+      "soh": 78.658,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2024-05-21",
+      "soh": 78.652,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-22",
+      "soh": 78.637,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-22",
+      "soh": 78.609,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-23",
+      "soh": 78.569,
+      "source": "proxy"
+    },
+    {
+      "date": "2024-05-23",
+      "soh": 78.514,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-23",
+      "soh": 78.444,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-23",
+      "soh": 78.359,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2024-05-23",
+      "soh": 78.26,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-23",
+      "soh": 78.148,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-24",
+      "soh": 78.024,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-24",
+      "soh": 77.89,
+      "source": "proxy"
+    },
+    {
+      "date": "2024-05-24",
+      "soh": 77.748,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-24",
+      "soh": 77.601,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-24",
+      "soh": 77.452,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2024-05-24",
+      "soh": 77.303,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-24",
+      "soh": 77.157,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-28",
+      "soh": 77.018,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-29",
+      "soh": 76.886,
+      "source": "proxy"
+    },
+    {
+      "date": "2024-05-29",
+      "soh": 76.766,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-29",
+      "soh": 76.657,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-29",
+      "soh": 76.562,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2024-05-29",
+      "soh": 76.482,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-30",
+      "soh": 76.416,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-30",
+      "soh": 76.366,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-31",
+      "soh": 76.329,
+      "source": "proxy"
+    },
+    {
+      "date": "2024-05-31",
+      "soh": 76.305,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-31",
+      "soh": 76.292,
+      "source": "blend"
+    },
+    {
+      "date": "2024-05-31",
+      "soh": 76.289,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2024-06-01",
+      "soh": 76.292,
+      "source": "blend"
+    },
+    {
+      "date": "2024-06-03",
+      "soh": 76.3,
+      "source": "blend"
+    },
+    {
+      "date": "2024-06-03",
+      "soh": 76.308,
+      "source": "blend"
+    },
+    {
+      "date": "2024-06-03",
+      "soh": 76.316,
+      "source": "proxy"
+    },
+    {
+      "date": "2024-06-03",
+      "soh": 76.319,
+      "source": "blend"
+    },
+    {
+      "date": "2024-06-03",
+      "soh": 76.316,
+      "source": "blend"
+    },
+    {
+      "date": "2024-06-04",
+      "soh": 76.303,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2024-06-05",
+      "soh": 76.28,
+      "source": "blend"
+    },
+    {
+      "date": "2024-06-05",
+      "soh": 76.243,
+      "source": "blend"
+    },
+    {
+      "date": "2024-06-06",
+      "soh": 76.192,
+      "source": "blend"
+    },
+    {
+      "date": "2024-06-07",
+      "soh": 76.127,
+      "source": "proxy"
+    },
+    {
+      "date": "2024-06-08",
+      "soh": 76.047,
+      "source": "blend"
+    },
+    {
+      "date": "2024-06-08",
+      "soh": 75.952,
+      "source": "blend"
+    },
+    {
+      "date": "2024-06-10",
+      "soh": 75.844,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2024-06-10",
+      "soh": 75.723,
+      "source": "blend"
+    },
+    {
+      "date": "2024-06-11",
+      "soh": 75.592,
+      "source": "blend"
+    },
+    {
+      "date": "2024-06-11",
+      "soh": 75.452,
+      "source": "blend"
+    },
+    {
+      "date": "2024-06-11",
+      "soh": 75.306,
+      "source": "proxy"
+    },
+    {
+      "date": "2024-06-11",
+      "soh": 75.158,
+      "source": "blend"
+    },
+    {
+      "date": "2024-06-11",
+      "soh": 75.008,
+      "source": "blend"
+    },
+    {
+      "date": "2024-06-11",
+      "soh": 74.862,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2025-05-07",
+      "soh": 74.72,
+      "source": "blend"
+    },
+    {
+      "date": "2025-05-26",
+      "soh": 74.586,
+      "source": "blend"
+    },
+    {
+      "date": "2025-05-28",
+      "soh": 74.461,
+      "source": "blend"
+    },
+    {
+      "date": "2025-05-28",
+      "soh": 74.349,
+      "source": "proxy"
+    },
+    {
+      "date": "2025-05-28",
+      "soh": 74.25,
+      "source": "blend"
+    },
+    {
+      "date": "2025-06-03",
+      "soh": 74.165,
+      "source": "blend"
+    },
+    {
+      "date": "2025-06-03",
+      "soh": 74.095,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2025-06-06",
+      "soh": 74.04,
+      "source": "blend"
+    },
+    {
+      "date": "2025-06-06",
+      "soh": 73.999,
+      "source": "blend"
+    },
+    {
+      "date": "2025-07-25",
+      "soh": 73.972,
+      "source": "blend"
+    },
+    {
+      "date": "2025-10-24",
+      "soh": 73.956,
+      "source": "proxy"
+    },
+    {
+      "date": "2025-10-24",
+      "soh": 73.95,
+      "source": "blend"
+    },
+    {
+      "date": "2025-10-27",
+      "soh": 73.951,
+      "source": "blend"
+    },
+    {
+      "date": "2025-11-06",
+      "soh": 73.958,
+      "source": "observed_norm"
+    },
+    {
+      "date": "2025-11-14",
+      "soh": 73.967,
+      "source": "blend"
+    },
+    {
+      "date": "2025-11-19",
+      "soh": 73.975,
+      "source": "blend"
+    },
+    {
+      "date": "2025-11-20",
+      "soh": 73.98,
+      "source": "blend"
+    },
+    {
+      "date": "2025-11-20",
+      "soh": 73.979,
+      "source": "proxy"
+    },
+    {
+      "date": "2025-11-22",
+      "soh": 73.969,
+      "source": "blend"
+    },
+    {
+      "date": "2025-11-22",
+      "soh": 73.949,
+      "source": "blend"
+    }
+  ]
+}

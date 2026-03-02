@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { RecommendationsResponseSchema } from "@/lib/contracts/schemas";
-import { readPlaneRecommendationsSnapshot } from "@/lib/mock-store";
+import { readPlaneRecommendationsSnapshot } from "@/lib/snapshot-store";
 
 export async function GET(
   request: Request,
@@ -15,3 +15,4 @@ export async function GET(
   const payload = RecommendationsResponseSchema.parse(data);
   return NextResponse.json(payload);
 }
+
