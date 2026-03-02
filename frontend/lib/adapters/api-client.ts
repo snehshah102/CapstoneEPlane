@@ -3,6 +3,9 @@ import {
   FlightsResponseSchema,
   GlossaryResponseSchema,
   LearnBaselineResponseSchema,
+  MissionGameBaselineResponseSchema,
+  MissionGameEvaluateResponseSchema,
+  MissionGameInput,
   PlaneHealthResponseSchema,
   PlanesResponseSchema,
   PredictionsResponseSchema,
@@ -16,6 +19,26 @@ async function fetchAndParse<T>(
   parser: { parse: (data: unknown) => T }
 ) {
   const response = await fetch(endpoint, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Request failed: ${endpoint}`);
+  }
+  const payload = await response.json();
+  return parser.parse(payload);
+}
+
+async function postAndParse<T>(
+  endpoint: string,
+  body: unknown,
+  parser: { parse: (data: unknown) => T }
+) {
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body),
+    cache: "no-store"
+  });
   if (!response.ok) {
     throw new Error(`Request failed: ${endpoint}`);
   }
@@ -84,5 +107,20 @@ export function getChargingCost(airport: string, date: string, energyKwh: number
   return fetchAndParse(
     `/api/v1/charging-cost?airport=${airport}&date=${date}&energyKwh=${energyKwh}`,
     ChargingCostResponseSchema
+  );
+}
+
+export function getMissionGameBaseline() {
+  return fetchAndParse(
+    "/api/v1/mission-game/baseline",
+    MissionGameBaselineResponseSchema
+  );
+}
+
+export function evaluateMissionGame(input: MissionGameInput) {
+  return postAndParse(
+    "/api/v1/mission-game/evaluate",
+    input,
+    MissionGameEvaluateResponseSchema
   );
 }

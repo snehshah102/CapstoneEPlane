@@ -33,8 +33,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${headingFont.variable} ${bodyFont.variable}`}>
-      <body className="min-h-screen bg-hero-grid font-[var(--font-body)]">
+    <html
+      lang="en"
+      className={`${headingFont.variable} ${bodyFont.variable}`}
+      suppressHydrationWarning
+    >
+      <body
+        className="min-h-screen bg-hero-grid font-[var(--font-body)]"
+        suppressHydrationWarning
+      >
         <QueryProvider>
           <ChunkReloadGuard />
           <div className="mx-auto max-w-[1240px] px-5 pb-16 pt-5 md:px-8">
@@ -58,6 +65,13 @@ export default function RootLayout({
                 </Link>
                 <Link href="/planes" prefetch={false} className="transition hover:text-slate-900">
                   Planes
+                </Link>
+                <Link
+                  href="/mission-game"
+                  prefetch={false}
+                  className="transition hover:text-slate-900"
+                >
+                  FlightLab
                 </Link>
                 <Link href="/learn" prefetch={false} className="transition hover:text-slate-900">
                   Learn

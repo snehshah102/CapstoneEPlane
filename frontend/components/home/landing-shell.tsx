@@ -71,9 +71,9 @@ export function LandingShell() {
               <ArrowRight size={16} />
             </Button>
           </Link>
-          <Link href="/planes" prefetch={false}>
+          <Link href="/mission-game" prefetch={false}>
             <Button className="bg-white text-slate-900 ring-1 ring-slate-300 hover:bg-slate-50">
-              Open Dashboards
+              Open FlightLab
             </Button>
           </Link>
         </div>

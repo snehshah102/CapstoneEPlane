@@ -318,13 +318,22 @@ export function PlaneIndex() {
                   </p>
                 </div>
               </div>
-              <Link
-                href={`/planes/${plane.planeId}`}
-                prefetch={false}
-                className="inline-flex items-center text-base font-medium text-blue-700 hover:text-blue-600"
-              >
-                Open Plane Dashboard <ArrowUpRight className="ml-1 h-4 w-4" />
-              </Link>
+              <div className="flex flex-wrap items-center gap-4">
+                <Link
+                  href={`/planes/${plane.planeId}`}
+                  prefetch={false}
+                  className="inline-flex items-center text-base font-medium text-blue-700 hover:text-blue-600"
+                >
+                  Open Plane Dashboard <ArrowUpRight className="ml-1 h-4 w-4" />
+                </Link>
+                <Link
+                  href="/mission-game"
+                  prefetch={false}
+                  className="inline-flex items-center text-sm font-medium text-slate-700 hover:text-slate-900"
+                >
+                  Open FlightLab <ArrowUpRight className="ml-1 h-4 w-4" />
+                </Link>
+              </div>
             </Card>
           );
         })}

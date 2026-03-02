@@ -5,6 +5,13 @@ export const ConfidenceTierSchema = z.enum(["high", "medium", "low"]);
 export const HealthLabelSchema = z.enum(["healthy", "watch", "critical"]);
 export const WeatherModeSchema = z.enum(["live", "mixed", "fallback"]);
 export const ChargingCostSourceModeSchema = z.enum(["live", "fallback"]);
+export const MissionGameStatusSchema = z.enum([
+  "recommended",
+  "caution",
+  "not_recommended"
+]);
+export const MissionGameModeSchema = z.enum(["single", "fleet_compare"]);
+export const PayloadLevelSchema = z.enum(["light", "medium", "heavy"]);
 
 export const PlaneSummarySchema = z.object({
   planeId: z.string(),
@@ -196,6 +203,75 @@ export const ChargingCostEstimateSchema = z.object({
   generatedAt: z.string()
 });
 
+export const WeatherInputSchema = z.object({
+  tempC: z.number(),
+  windKph: z.number(),
+  precipMm: z.number()
+});
+
+export const MissionGameInputSchema = z.object({
+  mode: MissionGameModeSchema,
+  planeIds: z.array(z.string()).min(1),
+  date: z.string(),
+  plannedDurationMin: z.number().min(10).max(300),
+  routeDistanceKm: z.number().min(10).max(500),
+  targetSoc: z.number().min(50).max(100),
+  payloadLevel: PayloadLevelSchema,
+  weatherMode: z.enum(["forecast", "manual"]),
+  manualWeather: WeatherInputSchema.optional()
+});
+
+export const MissionGameBreakdownSchema = z.object({
+  batteryImpact: z.number(),
+  safetyConfidence: z.number(),
+  costEfficiency: z.number()
+});
+
+export const MissionGameSuggestionSchema = z.object({
+  action: z.string(),
+  expectedScoreDelta: z.number()
+});
+
+export const MissionGamePlaneResultSchema = z.object({
+  planeId: z.string(),
+  registration: z.string(),
+  overallScore: z.number(),
+  status: MissionGameStatusSchema,
+  breakdown: MissionGameBreakdownSchema,
+  estimatedCostUsd: z.number(),
+  estimatedBatteryImpact: z.number()
+});
+
+export const MissionGameResultSchema = z.object({
+  overallScore: z.number(),
+  status: MissionGameStatusSchema,
+  breakdown: MissionGameBreakdownSchema,
+  estimatedCostUsd: z.number(),
+  estimatedBatteryImpact: z.number(),
+  why: z.array(z.string()),
+  suggestions: z.array(MissionGameSuggestionSchema),
+  evaluatedAt: z.string(),
+  perPlaneResults: z.array(MissionGamePlaneResultSchema).optional()
+});
+
+export const MissionGameBaselineSchema = z.object({
+  defaults: z.object({
+    date: z.string(),
+    plannedDurationMin: z.number(),
+    routeDistanceKm: z.number(),
+    targetSoc: z.number(),
+    payloadLevel: PayloadLevelSchema,
+    weatherMode: z.enum(["forecast", "manual"]),
+    manualWeather: WeatherInputSchema
+  }),
+  scoringWeights: z.object({
+    battery: z.number(),
+    safety: z.number(),
+    cost: z.number(),
+    version: z.string()
+  })
+});
+
 export const PlanesResponseSchema = z.object({
   planes: z.array(PlaneSummarySchema)
 });
@@ -231,6 +307,14 @@ export const ChargingCostResponseSchema = z.object({
   estimate: ChargingCostEstimateSchema
 });
 
+export const MissionGameEvaluateResponseSchema = z.object({
+  result: MissionGameResultSchema
+});
+
+export const MissionGameBaselineResponseSchema = z.object({
+  baseline: MissionGameBaselineSchema
+});
+
 export type PlaneSummary = z.infer<typeof PlaneSummarySchema>;
 export type PlaneLiveHealth = z.infer<typeof PlaneLiveHealthSchema>;
 export type SohTrendPoint = z.infer<typeof SohTrendPointSchema>;
@@ -248,3 +332,7 @@ export type LearnInputs = z.infer<typeof LearnInputsSchema>;
 export type LearnOutputs = z.infer<typeof LearnOutputsSchema>;
 export type LearnBaseline = z.infer<typeof LearnBaselineSchema>;
 export type ChargingCostEstimate = z.infer<typeof ChargingCostEstimateSchema>;
+export type MissionGameInput = z.infer<typeof MissionGameInputSchema>;
+export type MissionGameResult = z.infer<typeof MissionGameResultSchema>;
+export type MissionGamePlaneResult = z.infer<typeof MissionGamePlaneResultSchema>;
+export type MissionGameBaseline = z.infer<typeof MissionGameBaselineSchema>;
