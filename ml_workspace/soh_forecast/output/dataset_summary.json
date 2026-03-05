@@ -1,0 +1,23 @@
+{
+  "rows_total": 1204,
+  "rows_with_next": 1200,
+  "rows_gap_gt_max": 10,
+  "by_plane": [
+    {
+      "plane_id": "166",
+      "rows_total": 1106,
+      "rows_with_next": 1104,
+      "rows_gap_gt_max": 10,
+      "min_date": "2023-05-16 11:00:00",
+      "max_date": "2025-12-02 17:35:00"
+    },
+    {
+      "plane_id": "192",
+      "rows_total": 98,
+      "rows_with_next": 96,
+      "rows_gap_gt_max": 0,
+      "min_date": "2025-06-03 11:30:00",
+      "max_date": "2025-07-05 00:47:00"
+    }
+  ]
+}

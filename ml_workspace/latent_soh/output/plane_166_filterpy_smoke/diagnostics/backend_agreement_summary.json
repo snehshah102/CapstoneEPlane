@@ -1,0 +1,20 @@
+[
+  {
+    "plane_id": "166",
+    "battery_id": 1,
+    "compare_backend_enabled": false,
+    "n_events_compared": 0,
+    "median_abs_backend_delta_pct": null,
+    "p95_abs_backend_delta_pct": null,
+    "max_abs_backend_delta_pct": null
+  },
+  {
+    "plane_id": "166",
+    "battery_id": 2,
+    "compare_backend_enabled": false,
+    "n_events_compared": 0,
+    "median_abs_backend_delta_pct": null,
+    "p95_abs_backend_delta_pct": null,
+    "max_abs_backend_delta_pct": null
+  }
+]

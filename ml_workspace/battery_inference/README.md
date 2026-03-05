@@ -4,6 +4,10 @@ This workspace contains a plane-level battery type inference workflow based on c
 
 It estimates effective pack capacity from partial charging traces and uses top-of-charge voltage as a secondary cross-check.
 
+It now defaults to the corrected downstream parquet files in `data/`:
+- `data/event_manifest.parquet`
+- `data/event_timeseries.parquet`
+
 ## Run
 
 ```bash
