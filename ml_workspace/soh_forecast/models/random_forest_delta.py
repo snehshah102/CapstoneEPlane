@@ -12,6 +12,7 @@ def train_random_forest_delta(
     target_spec: TargetSpec,
     feature_cols: list[str],
     model_name: str,
+    param_grid: list[dict] | None = None,
 ) -> ModelArtifacts:
     train_x, medians, dummy_cols = make_feature_frame(split_frames.train, feature_cols)
     valid_x, _, _ = make_feature_frame(split_frames.valid, feature_cols, medians, dummy_cols)
@@ -37,11 +38,12 @@ def train_random_forest_delta(
 
     best_model = None
     best_score = np.inf
-    for params in [
+    grid = param_grid or [
         {"n_estimators": 300, "max_depth": None, "min_samples_leaf": 3, "max_features": "sqrt", "random_state": 42, "n_jobs": -1},
         {"n_estimators": 500, "max_depth": 8, "min_samples_leaf": 3, "max_features": "sqrt", "random_state": 42, "n_jobs": -1},
         {"n_estimators": 500, "max_depth": 12, "min_samples_leaf": 5, "max_features": 0.5, "random_state": 42, "n_jobs": -1},
-    ]:
+    ]
+    for params in grid:
         candidate = RandomForestRegressor(**params)
         candidate.fit(train_x, y_train_delta)
         score = float(np.mean(np.abs(y_valid_delta - candidate.predict(valid_x))))

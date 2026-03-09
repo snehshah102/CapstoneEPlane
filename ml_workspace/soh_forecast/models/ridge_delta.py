@@ -13,6 +13,7 @@ def train_ridge_delta(
     target_spec: TargetSpec,
     feature_cols: list[str],
     model_name: str,
+    alphas: list[float] | None = None,
 ) -> ModelArtifacts:
     train_x, medians, dummy_cols = make_feature_frame(split_frames.train, feature_cols)
     valid_x, _, _ = make_feature_frame(split_frames.valid, feature_cols, medians, dummy_cols)
@@ -42,13 +43,14 @@ def train_ridge_delta(
     test_x_s = scaler.transform(test_x)
     holdout_x_s = scaler.transform(holdout_x) if not split_frames.holdout.empty else np.empty((0, train_x.shape[1]))
 
+    ridge_alphas = alphas or [0.01, 0.1, 1.0, 10.0, 100.0]
     model = fit_best_linear(
         Ridge,
         train_x_s,
         y_train_delta,
         valid_x_s,
         y_valid_delta,
-        [{"alpha": alpha} for alpha in [0.01, 0.1, 1.0, 10.0, 100.0]],
+        [{"alpha": alpha} for alpha in ridge_alphas],
     )
 
     pred_train_level = current_train + model.predict(train_x_s)

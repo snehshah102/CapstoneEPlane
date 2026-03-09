@@ -13,6 +13,7 @@ def train_elastic_net_delta(
     target_spec: TargetSpec,
     feature_cols: list[str],
     model_name: str,
+    grid: list[dict] | None = None,
 ) -> ModelArtifacts:
     train_x, medians, dummy_cols = make_feature_frame(split_frames.train, feature_cols)
     valid_x, _, _ = make_feature_frame(split_frames.valid, feature_cols, medians, dummy_cols)
@@ -42,7 +43,19 @@ def train_elastic_net_delta(
     test_x_s = scaler.transform(test_x)
     holdout_x_s = scaler.transform(holdout_x) if not split_frames.holdout.empty else np.empty((0, train_x.shape[1]))
 
-    grid = [{"alpha": alpha, "l1_ratio": l1_ratio} for alpha in [0.001, 0.01, 0.1, 1.0] for l1_ratio in [0.1, 0.5, 0.9]]
+    if grid is None:
+        grid = [
+            {
+                "alpha": alpha,
+                "l1_ratio": l1_ratio,
+                "max_iter": 50000,
+                "tol": 1e-3,
+                "selection": "random",
+                "random_state": 42,
+            }
+            for alpha in [0.01, 0.1, 1.0, 10.0]
+            for l1_ratio in [0.1, 0.5, 0.9]
+        ]
     model = fit_best_linear(ElasticNet, train_x_s, y_train_delta, valid_x_s, y_valid_delta, grid)
 
     pred_train_level = current_train + model.predict(train_x_s)

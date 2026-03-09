@@ -15,7 +15,7 @@ def _is_binary(series: pd.Series) -> bool:
     return len(values) <= 2 and set(np.round(values, 10)).issubset({0.0, 1.0})
 
 
-def _build_gam_preprocessor(train_x: pd.DataFrame) -> tuple[ColumnTransformer, list[str]]:
+def _build_gam_preprocessor(train_x: pd.DataFrame, n_knots: int = 4) -> tuple[ColumnTransformer, list[str]]:
     binary_cols = [col for col in train_x.columns if _is_binary(train_x[col])]
     continuous_cols = [col for col in train_x.columns if col not in binary_cols]
     transformers = []
@@ -26,7 +26,7 @@ def _build_gam_preprocessor(train_x: pd.DataFrame) -> tuple[ColumnTransformer, l
                 Pipeline(
                     [
                         ("scaler", StandardScaler()),
-                        ("spline", SplineTransformer(n_knots=4, degree=3, include_bias=False)),
+                        ("spline", SplineTransformer(n_knots=n_knots, degree=3, include_bias=False)),
                     ]
                 ),
                 continuous_cols,
@@ -43,6 +43,8 @@ def train_gam_spline_delta(
     target_spec: TargetSpec,
     feature_cols: list[str],
     model_name: str,
+    alphas: list[float] | None = None,
+    n_knots_list: list[int] | None = None,
 ) -> ModelArtifacts:
     train_x, medians, dummy_cols = make_feature_frame(split_frames.train, feature_cols)
     valid_x, _, _ = make_feature_frame(split_frames.valid, feature_cols, medians, dummy_cols)
@@ -66,16 +68,20 @@ def train_gam_spline_delta(
     y_train_delta = y_train_level - current_train
     y_valid_delta = y_valid_level - current_valid
 
-    preprocessor, continuous_cols = _build_gam_preprocessor(train_x)
+    gam_alphas = alphas or [0.01, 0.1, 1.0, 10.0]
+    knots_list = n_knots_list or [4]
+    preprocessor, continuous_cols = _build_gam_preprocessor(train_x, n_knots=knots_list[0])
     best_model = None
     best_score = np.inf
-    for alpha in [0.01, 0.1, 1.0, 10.0]:
-        candidate = Pipeline([("preprocess", preprocessor), ("ridge", Ridge(alpha=alpha))])
-        candidate.fit(train_x, y_train_delta)
-        score = float(np.mean(np.abs(y_valid_delta - candidate.predict(valid_x))))
-        if score < best_score:
-            best_model = candidate
-            best_score = score
+    for n_knots in knots_list:
+        preprocessor, _ = _build_gam_preprocessor(train_x, n_knots=n_knots)
+        for alpha in gam_alphas:
+            candidate = Pipeline([("preprocess", preprocessor), ("ridge", Ridge(alpha=alpha))])
+            candidate.fit(train_x, y_train_delta)
+            score = float(np.mean(np.abs(y_valid_delta - candidate.predict(valid_x))))
+            if score < best_score:
+                best_model = candidate
+                best_score = score
 
     pred_train_level = current_train + best_model.predict(train_x)
     pred_valid_level = current_valid + best_model.predict(valid_x)

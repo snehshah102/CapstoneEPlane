@@ -12,6 +12,7 @@ def train_hist_gbdt_delta(
     target_spec: TargetSpec,
     feature_cols: list[str],
     model_name: str,
+    param_grid: list[dict] | None = None,
 ) -> ModelArtifacts:
     train_x, medians, dummy_cols = make_feature_frame(split_frames.train, feature_cols)
     valid_x, _, _ = make_feature_frame(split_frames.valid, feature_cols, medians, dummy_cols)
@@ -37,11 +38,12 @@ def train_hist_gbdt_delta(
 
     best_model = None
     best_score = np.inf
-    for params in [
+    grid = param_grid or [
         {"learning_rate": 0.03, "max_depth": 3, "max_iter": 300, "min_samples_leaf": 10, "random_state": 42},
         {"learning_rate": 0.05, "max_depth": 4, "max_iter": 300, "min_samples_leaf": 10, "random_state": 42},
         {"learning_rate": 0.05, "max_depth": 3, "max_iter": 500, "min_samples_leaf": 5, "random_state": 42},
-    ]:
+    ]
+    for params in grid:
         candidate = HistGradientBoostingRegressor(**params)
         candidate.fit(train_x, y_train_delta)
         score = float(np.mean(np.abs(y_valid_delta - candidate.predict(valid_x))))

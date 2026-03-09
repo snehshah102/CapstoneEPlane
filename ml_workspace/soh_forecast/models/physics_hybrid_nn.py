@@ -34,7 +34,7 @@ class PhysicsHybridConfig:
     context_feature_candidates: tuple[str, ...] = (
         "observed_soh_pct",
         "latent_soh_filter_pct",
-        "latent_soh_smooth_std_pct",
+        "latent_soh_filter_std_pct",
         "measurement_sigma_pct",
         "condition_multiplier",
         "current_abs_mean_a",

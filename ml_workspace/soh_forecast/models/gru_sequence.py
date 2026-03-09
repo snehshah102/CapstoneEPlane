@@ -8,10 +8,21 @@ from ml_workspace.soh_forecast.models.sequence_common import SequenceConfig, tra
 
 
 class GRUForecaster(nn.Module):
-    def __init__(self, input_dim: int, hidden_dim: int = 48):
+    def __init__(self, input_dim: int, hidden_dim: int = 48, num_layers: int = 2, dropout: float = 0.1):
         super().__init__()
-        self.gru = nn.GRU(input_dim, hidden_dim, batch_first=True)
-        self.head = nn.Sequential(nn.Linear(hidden_dim, hidden_dim // 2), nn.ReLU(), nn.Linear(hidden_dim // 2, 1))
+        self.gru = nn.GRU(
+            input_dim,
+            hidden_dim,
+            num_layers=num_layers,
+            dropout=dropout if num_layers > 1 else 0.0,
+            batch_first=True,
+        )
+        self.head = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim // 2),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden_dim // 2, 1),
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         _, h_n = self.gru(x)
@@ -34,5 +45,10 @@ def train_gru_sequence(
         feature_cols=feature_cols,
         model_name=model_name,
         config=config,
-        model_builder=lambda input_dim, hidden_dim: GRUForecaster(input_dim, hidden_dim),
+        model_builder=lambda input_dim, hidden_dim: GRUForecaster(
+            input_dim,
+            hidden_dim,
+            num_layers=config.num_layers,
+            dropout=config.dropout,
+        ),
     )

@@ -39,7 +39,7 @@ LATENT_FEATURE_COLS = [
     "latent_soh_filterpy_filter_pct",
     "_filterpy_pred_state_pct",
     "_filterpy_pred_var_pct2",
-    "latent_soh_smooth_std_pct",
+    "latent_soh_filter_std_pct",
     "measurement_sigma_pct",
     "condition_multiplier",
 ]
@@ -189,6 +189,8 @@ DEFAULT_MULTI_HORIZON_CONFIGS: tuple[dict[str, object], ...] = (
     {"kind": "flight", "value": 1, "label": "flight_1", "title": "Next flight"},
     {"kind": "flight", "value": 5, "label": "flight_5", "title": "Next 5 flights"},
     {"kind": "flight", "value": 10, "label": "flight_10", "title": "Next 10 flights"},
+    {"kind": "flight", "value": 15, "label": "flight_15", "title": "Next 15 flights"},
+    {"kind": "flight", "value": 20, "label": "flight_20", "title": "Next 20 flights"},
 )
 
 
@@ -198,7 +200,6 @@ def ensure_latent_outputs(
     run_latent_pipeline: bool,
     rt_profile: str,
     q_day_sigma_pct: float,
-    compare_backend: bool,
     latent_root: Path | None = None,
     timeseries_path: Path | None = None,
     spec_path: Path | None = None,
@@ -221,7 +222,6 @@ def ensure_latent_outputs(
         spec_path=spec_path,
         output_dir=plane_dir,
         q_day_sigma_pct=q_day_sigma_pct,
-        compare_backend=compare_backend,
         rt_profile=rt_profile,
     )
     print(json.dumps(result, indent=2))
@@ -234,7 +234,6 @@ def load_plane_latent(
     run_latent_pipeline: bool = False,
     rt_profile: str = "balanced",
     q_day_sigma_pct: float = 0.05,
-    compare_backend: bool = True,
     latent_root: Path | None = None,
     timeseries_path: Path | None = None,
     spec_path: Path | None = None,
@@ -245,7 +244,6 @@ def load_plane_latent(
         run_latent_pipeline=run_latent_pipeline,
         rt_profile=rt_profile,
         q_day_sigma_pct=q_day_sigma_pct,
-        compare_backend=compare_backend,
         latent_root=latent_root,
         timeseries_path=timeseries_path,
         spec_path=spec_path,
@@ -265,7 +263,6 @@ def load_latent_dataset(
     run_latent_pipeline: bool = False,
     rt_profile: str = "balanced",
     q_day_sigma_pct: float = 0.05,
-    compare_backend: bool = True,
 ) -> tuple[pd.DataFrame, dict[str, dict]]:
     latent_root = repo_root / "ml_workspace" / "latent_soh" / "output"
     timeseries_candidates = [
@@ -283,7 +280,6 @@ def load_latent_dataset(
         run_latent_pipeline=run_latent_pipeline,
         rt_profile=rt_profile,
         q_day_sigma_pct=q_day_sigma_pct,
-        compare_backend=compare_backend,
         latent_root=latent_root,
         timeseries_path=timeseries_path,
         spec_path=spec_path,
@@ -300,7 +296,6 @@ def load_latent_dataset(
                 run_latent_pipeline=run_latent_pipeline,
                 rt_profile=rt_profile,
                 q_day_sigma_pct=q_day_sigma_pct,
-                compare_backend=compare_backend,
                 latent_root=latent_root,
                 timeseries_path=timeseries_path,
                 spec_path=spec_path,
@@ -333,7 +328,7 @@ def add_forecast_features(df: pd.DataFrame) -> pd.DataFrame:
             "observed_soh_span_pct",
             "latent_soh_filter_pct",
             "latent_soh_filterpy_filter_pct",
-            "latent_soh_smooth_std_pct",
+            "latent_soh_filter_std_pct",
             "_filterpy_pred_state_pct",
             "_filterpy_pred_var_pct2",
             "measurement_sigma_pct",
@@ -457,7 +452,10 @@ def add_forecast_features(df: pd.DataFrame) -> pd.DataFrame:
         g["next_observed_soh_pct"] = g["observed_soh_pct"].shift(-1)
         g["next_observed_delta_pct"] = g["next_observed_soh_pct"] - g["observed_soh_pct"]
         g["next_latent_soh_smooth_pct"] = g["latent_soh_smooth_pct"].shift(-1)
-        g["next_latent_delta_pct"] = g["next_latent_soh_smooth_pct"] - g["latent_soh_filter_pct"]
+        g["next_latent_soh_causal_pct"] = g["latent_soh_filter_pct"].shift(-1)
+        g["next_latent_soh_rts_pct"] = g["next_latent_soh_smooth_pct"]
+        g["next_latent_soh_smooth_pct"] = g["next_latent_soh_causal_pct"]
+        g["next_latent_delta_pct"] = g["next_latent_soh_causal_pct"] - g["latent_soh_filter_pct"]
         g["next_cumulative_efc"] = g["cumulative_efc"].shift(-1)
         g["next_cumulative_ah"] = g["cumulative_ah"].shift(-1)
 
@@ -517,7 +515,8 @@ def add_multi_horizon_targets(
     for (_, _), group in df.groupby(["plane_id", "battery_id"], sort=False):
         g = group.sort_values(["event_datetime", "flight_id"]).copy()
         observed_soh = pd.to_numeric(g["observed_soh_pct"], errors="coerce").to_numpy(dtype=float)
-        latent_soh = pd.to_numeric(g["latent_soh_smooth_pct"], errors="coerce").to_numpy(dtype=float)
+        latent_soh_smooth = pd.to_numeric(g["latent_soh_smooth_pct"], errors="coerce").to_numpy(dtype=float)
+        latent_soh_causal = pd.to_numeric(g["latent_soh_filter_pct"], errors="coerce").to_numpy(dtype=float)
         current_latent = pd.to_numeric(g["latent_soh_filter_pct"], errors="coerce").to_numpy(dtype=float)
         age_days = (g["event_datetime"] - g["event_datetime"].iloc[0]).dt.total_seconds().to_numpy(dtype=float) / 86400.0
         cumulative_efc = pd.to_numeric(g["cumulative_efc"], errors="coerce").fillna(0.0).to_numpy(dtype=float)
@@ -536,7 +535,8 @@ def add_multi_horizon_targets(
             safe_idx = np.where(valid, target_idx, 0)
 
             observed_target = np.where(valid, observed_soh[safe_idx], np.nan)
-            latent_target = np.where(valid, latent_soh[safe_idx], np.nan)
+            latent_target_smooth = np.where(valid, latent_soh_smooth[safe_idx], np.nan)
+            latent_target_causal = np.where(valid, latent_soh_causal[safe_idx], np.nan)
             realized_days = np.where(valid, age_days[safe_idx] - age_days[row_idx], np.nan)
             realized_efc = np.where(valid, cumulative_efc[safe_idx] - cumulative_efc[row_idx], np.nan)
             realized_events = np.where(valid, safe_idx - row_idx, np.nan)
@@ -544,8 +544,11 @@ def add_multi_horizon_targets(
 
             g[f"next_observed_soh_{label}_pct"] = observed_target
             g[f"next_observed_delta_{label}_pct"] = observed_target - observed_soh
-            g[f"next_latent_soh_smooth_{label}_pct"] = latent_target
-            g[f"next_latent_delta_{label}_pct"] = latent_target - current_latent
+            g[f"next_latent_soh_smooth_{label}_pct"] = latent_target_smooth
+            g[f"next_latent_soh_causal_{label}_pct"] = latent_target_causal
+            g[f"next_latent_soh_rts_{label}_pct"] = latent_target_smooth
+            g[f"next_latent_soh_smooth_{label}_pct"] = latent_target_causal
+            g[f"next_latent_delta_{label}_pct"] = latent_target_causal - current_latent
             g[f"horizon_{label}_days"] = realized_days
             g[f"horizon_{label}_efc"] = realized_efc
             g[f"horizon_{label}_events"] = realized_events
@@ -570,7 +573,11 @@ def make_multi_horizon_target_specs(
         title = str(cfg["title"])
 
         if include_latent:
-            next_col = "next_latent_soh_smooth_pct" if kind == "step" and int(round(value)) == 1 else f"next_latent_soh_smooth_{label}_pct"
+            next_col = (
+                "next_latent_soh_causal_pct"
+                if kind == "step" and int(round(value)) == 1
+                else f"next_latent_soh_causal_{label}_pct"
+            )
             delta_col = "next_latent_delta_pct" if kind == "step" and int(round(value)) == 1 else f"next_latent_delta_{label}_pct"
             specs[f"latent_{label}"] = TargetSpec(
                 name=f"latent_{label}",

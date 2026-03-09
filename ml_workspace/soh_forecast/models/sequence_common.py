@@ -13,14 +13,18 @@ from ml_workspace.soh_forecast.common import ModelArtifacts, SplitFrames, Target
 
 @dataclass
 class SequenceConfig:
-    lookback: int = 12
+    lookback: int = 20
     hidden_dim: int = 48
+    num_layers: int = 2
+    dropout: float = 0.1
     batch_size: int = 32
     eval_batch_size: int = 64
     lr: float = 1e-3
     weight_decay: float = 1e-4
-    max_epochs: int = 40
-    patience: int = 8
+    max_epochs: int = 60
+    patience: int = 10
+    grad_clip: float = 1.0
+    predict_delta: bool = True
     device: str = "cpu"
 
 
@@ -56,25 +60,41 @@ def build_sequence_rows(
     return rows
 
 
-def rows_to_loader(rows: list[dict], split_name: str, batch_size: int, shuffle: bool):
+def rows_to_loader(rows: list[dict], split_name: str, batch_size: int, shuffle: bool, predict_delta: bool):
     subset = [row for row in rows if row["split"] == split_name]
     if not subset:
         return None, subset
     X = torch.tensor(np.stack([row["X"] for row in subset]), dtype=torch.float32)
-    y = torch.tensor(np.array([row["y_level"] for row in subset], dtype=float), dtype=torch.float32)
     current = torch.tensor(np.array([row["current_level"] for row in subset], dtype=float), dtype=torch.float32)
+    y_levels = np.array([row["y_level"] for row in subset], dtype=float)
+    if predict_delta:
+        y = torch.tensor(y_levels - current.numpy(), dtype=torch.float32)
+    else:
+        y = torch.tensor(y_levels, dtype=torch.float32)
     return DataLoader(TensorDataset(X, y, current), batch_size=batch_size, shuffle=shuffle), subset
 
 
-def predict_sequence(loader, subset_rows, model: nn.Module, device: torch.device, model_name: str) -> pd.DataFrame:
+def predict_sequence(
+    loader,
+    subset_rows,
+    model: nn.Module,
+    device: torch.device,
+    model_name: str,
+    predict_delta: bool,
+) -> pd.DataFrame:
     if loader is None or not subset_rows:
         return pd.DataFrame(columns=["event_id", "split", model_name])
     model.eval()
     preds = []
+    currents = []
     with torch.no_grad():
-        for xb, _yb, _current in loader:
+        for xb, _yb, current in loader:
             preds.append(model(xb.to(device)).cpu().numpy())
+            currents.append(current.numpy())
     pred_values = np.concatenate(preds) if preds else np.array([], dtype=float)
+    if predict_delta:
+        current_values = np.concatenate(currents) if currents else np.array([], dtype=float)
+        pred_values = pred_values + current_values
     return pd.DataFrame({"event_id": [row["event_id"] for row in subset_rows], "split": [row["split"] for row in subset_rows], model_name: pred_values})
 
 
@@ -106,17 +126,17 @@ def train_sequence_model(
     device = torch.device(config.device)
     seq_work, seq_medians, seq_means, seq_stds = prepare_sequence_work(predictive_df, split_frames, feature_cols)
     rows = build_sequence_rows(seq_work, feature_cols, target_spec, config.lookback)
-    train_loader, train_rows = rows_to_loader(rows, "train", config.batch_size, True)
-    valid_loader, valid_rows = rows_to_loader(rows, "valid", config.eval_batch_size, False)
-    test_loader, test_rows = rows_to_loader(rows, "test", config.eval_batch_size, False)
-    holdout_loader, holdout_rows = rows_to_loader(rows, "holdout", config.eval_batch_size, False)
+    train_loader, train_rows = rows_to_loader(rows, "train", config.batch_size, True, config.predict_delta)
+    valid_loader, valid_rows = rows_to_loader(rows, "valid", config.eval_batch_size, False, config.predict_delta)
+    test_loader, test_rows = rows_to_loader(rows, "test", config.eval_batch_size, False, config.predict_delta)
+    holdout_loader, holdout_rows = rows_to_loader(rows, "holdout", config.eval_batch_size, False, config.predict_delta)
 
     if train_loader is None or valid_loader is None:
         return ModelArtifacts(model_name=model_name, predictions=pd.DataFrame(columns=["event_id", "split", model_name]), metrics=pd.DataFrame())
 
     model = model_builder(len(feature_cols), config.hidden_dim).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=config.lr, weight_decay=config.weight_decay)
-    loss_fn = nn.MSELoss()
+    loss_fn = nn.SmoothL1Loss()
     history = []
     best_state = None
     best_valid_mae = np.inf
@@ -130,6 +150,8 @@ def train_sequence_model(
             pred = model(xb.to(device))
             loss = loss_fn(pred, yb.to(device))
             loss.backward()
+            if config.grad_clip and config.grad_clip > 0:
+                nn.utils.clip_grad_norm_(model.parameters(), config.grad_clip)
             optimizer.step()
             train_losses.append(float(loss.item()))
 
@@ -137,7 +159,14 @@ def train_sequence_model(
         with torch.no_grad():
             valid_pred = np.concatenate([model(xb.to(device)).cpu().numpy() for xb, _yb, _current in valid_loader])
             valid_true = np.concatenate([yb.numpy() for _xb, yb, _current in valid_loader])
-        valid_mae = float(np.mean(np.abs(valid_true - valid_pred)))
+            valid_current = np.concatenate([current.numpy() for _xb, _yb, current in valid_loader])
+        if config.predict_delta:
+            valid_pred_level = valid_pred + valid_current
+            valid_true_level = valid_true + valid_current
+        else:
+            valid_pred_level = valid_pred
+            valid_true_level = valid_true
+        valid_mae = float(np.mean(np.abs(valid_true_level - valid_pred_level)))
         history.append({"epoch": epoch, "train_loss": float(np.mean(train_losses)), "valid_mae": valid_mae})
         if valid_mae < best_valid_mae:
             best_valid_mae = valid_mae
@@ -153,10 +182,10 @@ def train_sequence_model(
 
     predictions = pd.concat(
         [
-            predict_sequence(train_loader, train_rows, model, device, model_name),
-            predict_sequence(valid_loader, valid_rows, model, device, model_name),
-            predict_sequence(test_loader, test_rows, model, device, model_name),
-            predict_sequence(holdout_loader, holdout_rows, model, device, model_name),
+            predict_sequence(train_loader, train_rows, model, device, model_name, config.predict_delta),
+            predict_sequence(valid_loader, valid_rows, model, device, model_name, config.predict_delta),
+            predict_sequence(test_loader, test_rows, model, device, model_name, config.predict_delta),
+            predict_sequence(holdout_loader, holdout_rows, model, device, model_name, config.predict_delta),
         ],
         ignore_index=True,
     )
@@ -198,5 +227,6 @@ def train_sequence_model(
             "seq_medians": seq_medians,
             "seq_means": seq_means,
             "seq_stds": seq_stds,
+            "predict_delta": config.predict_delta,
         },
     )

@@ -13,13 +13,13 @@ try:
     from .event_observation_dataset import build_event_observation_table, load_aux_rows
     from .residual_features import compute_residual_features
     from .spec_loader import load_plane_battery_spec
-    from .state_space import add_monotone_projection, compare_backend_agreement, run_filterpy_smoother_1d, run_pykalman_smoother_1d
+    from .state_space import add_monotone_projection, run_filterpy_smoother_1d
 except ImportError:
     from condition_noise import RT_PROFILES, compute_condition_scores, estimate_measurement_variance, resolve_rt_profile
     from event_observation_dataset import build_event_observation_table, load_aux_rows
     from residual_features import compute_residual_features
     from spec_loader import load_plane_battery_spec
-    from state_space import add_monotone_projection, compare_backend_agreement, run_filterpy_smoother_1d, run_pykalman_smoother_1d
+    from state_space import add_monotone_projection, run_filterpy_smoother_1d
 
 
 def _json_default(value):
@@ -37,20 +37,8 @@ def _ensure_output_dirs(base_output_dir: Path) -> dict[str, Path]:
     return {"root": base_output_dir, "diagnostics": diagnostics, "plots": plots}
 
 
-def _fit_one_battery(group: pd.DataFrame, q_day_sigma_pct: float, compare_backend: bool) -> pd.DataFrame:
+def _fit_one_battery(group: pd.DataFrame, q_day_sigma_pct: float) -> pd.DataFrame:
     fitted = run_filterpy_smoother_1d(group, q_day_sigma_pct=q_day_sigma_pct)
-    if compare_backend:
-        compared = run_pykalman_smoother_1d(group, q_day_sigma_pct=q_day_sigma_pct)
-        fitted["latent_soh_pykalman_smooth_pct"] = compared["latent_soh_pykalman_smooth_pct"].to_numpy()
-        fitted["latent_soh_pykalman_smooth_var_pct2"] = compared["latent_soh_pykalman_smooth_var_pct2"].to_numpy()
-    else:
-        fitted["latent_soh_pykalman_smooth_pct"] = np.nan
-        fitted["latent_soh_pykalman_smooth_var_pct2"] = np.nan
-
-    fitted["latent_soh_backend_delta_pct"] = (
-        fitted["latent_soh_filterpy_smooth_pct"] - fitted["latent_soh_pykalman_smooth_pct"]
-    )
-    fitted["latent_soh_backend_abs_delta_pct"] = fitted["latent_soh_backend_delta_pct"].abs()
     fitted = add_monotone_projection(fitted)
     fitted["residual_pct"] = fitted["observed_soh_pct"] - fitted["latent_soh_smooth_pct"]
     fitted["standardized_residual"] = fitted["residual_pct"] / fitted["measurement_sigma_pct"]
@@ -124,7 +112,7 @@ def _build_smoother_summary(
         "raw_max_upward_jump_pct_per_battery": {},
         "smoothed_max_upward_jump_pct_per_battery": {},
         "fraction_events_with_condition_multiplier_gt_3": {},
-        "notes": "FilterPy latent SOH is the canonical output. PyKalman is a comparison backend only.",
+        "notes": "FilterPy latent SOH is the canonical output.",
     }
     for battery_id, group in latent_df.groupby("battery_id", sort=True, observed=True):
         raw_stats = _series_summary(group["observed_soh_pct"])
@@ -226,7 +214,7 @@ def _build_spike_diagnostics(latent_df: pd.DataFrame, spike_threshold_pct: float
     return top_spikes.reset_index(drop=True), spike_summary
 
 
-def _write_plots(latent_df: pd.DataFrame, plots_dir: Path, compare_backend: bool) -> None:
+def _write_plots(latent_df: pd.DataFrame, plots_dir: Path) -> None:
     for battery_id, group in latent_df.groupby("battery_id", sort=True, observed=True):
         g = group.sort_values(["event_datetime", "flight_id"])
 
@@ -234,8 +222,6 @@ def _write_plots(latent_df: pd.DataFrame, plots_dir: Path, compare_backend: bool
         ax.plot(g["event_datetime"], g["observed_soh_pct"], color="0.7", linewidth=1.0, label="Observed SOH")
         ax.plot(g["event_datetime"], g["latent_soh_filter_pct"], color="#1f77b4", linewidth=1.1, label="FilterPy filter")
         ax.plot(g["event_datetime"], g["latent_soh_smooth_pct"], color="#d62728", linewidth=1.8, label="FilterPy RTS")
-        if compare_backend and g["latent_soh_pykalman_smooth_pct"].notna().any():
-            ax.plot(g["event_datetime"], g["latent_soh_pykalman_smooth_pct"], color="#2ca02c", linewidth=1.2, label="PyKalman")
         band_low = g["latent_soh_smooth_pct"] - 2.0 * g["latent_soh_smooth_std_pct"]
         band_high = g["latent_soh_smooth_pct"] + 2.0 * g["latent_soh_smooth_std_pct"]
         ax.fill_between(g["event_datetime"], band_low, band_high, color="#d62728", alpha=0.15, linewidth=0)
@@ -264,16 +250,6 @@ def _write_plots(latent_df: pd.DataFrame, plots_dir: Path, compare_backend: bool
         fig.savefig(plots_dir / f"battery_{int(battery_id)}_residual_hist.png", dpi=160)
         plt.close(fig)
 
-        if compare_backend and g["latent_soh_backend_abs_delta_pct"].notna().any():
-            fig, ax = plt.subplots(figsize=(12, 4))
-            ax.plot(g["event_datetime"], g["latent_soh_backend_abs_delta_pct"], color="#2ca02c", linewidth=1.2)
-            ax.set_title(f"Plane {g['plane_id'].iloc[0]} Battery {int(battery_id)}: Backend Abs Delta")
-            ax.set_ylabel("|FilterPy - PyKalman| (%)")
-            fig.autofmt_xdate()
-            fig.tight_layout()
-            fig.savefig(plots_dir / f"battery_{int(battery_id)}_backend_delta.png", dpi=160)
-            plt.close(fig)
-
         fig, ax = plt.subplots(figsize=(10, 4))
         ax.scatter(g["score_switch"], g["residual_pct"], alpha=0.55, s=14, color="#7f7f7f")
         ax.set_title(f"Plane {g['plane_id'].iloc[0]} Battery {int(battery_id)}: Residual vs switch score")
@@ -300,7 +276,6 @@ def build_latent_soh_labels(
     output_dir: str | Path,
     q_day_sigma_pct: float = 0.05,
     spike_threshold_pct: float = 2.0,
-    compare_backend: bool = True,
     rt_profile: str = "balanced",
 ) -> dict[str, object]:
     spec = load_plane_battery_spec(spec_path, plane_id)
@@ -322,7 +297,7 @@ def build_latent_soh_labels(
 
     fitted_frames: list[pd.DataFrame] = []
     for _, group in model_df.groupby(["plane_id", "battery_id"], sort=False, observed=True):
-        fitted_frames.append(_fit_one_battery(group, q_day_sigma_pct=q_day_sigma_pct, compare_backend=compare_backend))
+        fitted_frames.append(_fit_one_battery(group, q_day_sigma_pct=q_day_sigma_pct))
     latent_df = pd.concat(fitted_frames, ignore_index=True)
     latent_df = compute_residual_features(latent_df)
     latent_df = latent_df.sort_values(["battery_id", "event_datetime", "flight_id"]).reset_index(drop=True)
@@ -346,13 +321,7 @@ def build_latent_soh_labels(
         encoding="utf-8",
     )
 
-    backend_summary = compare_backend_agreement(latent_df)
-    (dirs["diagnostics"] / "backend_agreement_summary.json").write_text(
-        json.dumps(backend_summary, indent=2, default=_json_default),
-        encoding="utf-8",
-    )
-
-    _write_plots(latent_df, plots_dir=dirs["plots"], compare_backend=compare_backend)
+    _write_plots(latent_df, plots_dir=dirs["plots"])
 
     return {
         "plane_id": str(plane_id),
@@ -361,9 +330,7 @@ def build_latent_soh_labels(
         "event_observation_rows": int(len(event_df)),
         "latent_rows": int(len(latent_df)),
         "n_events_dropped_missing_observed_soh": n_dropped,
-        "compare_backend": bool(compare_backend),
         "smoother_summary": smoother_summary,
-        "backend_summary": backend_summary,
     }
 
 
@@ -400,25 +367,11 @@ def _parse_args() -> argparse.Namespace:
         default=2.0,
         help="Reserved spike threshold for downstream diagnostics",
     )
-    parser.add_argument(
-        "--backend",
-        choices=["filterpy", "compare"],
-        default=None,
-        help="Use FilterPy only, or compare against PyKalman",
-    )
-    parser.add_argument(
-        "--no-pykalman-compare",
-        action="store_true",
-        help="Disable the PyKalman comparison run",
-    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = _parse_args()
-    default_compare = str(args.plane_id) == "166"
-    backend = args.backend or ("compare" if default_compare else "filterpy")
-    compare_backend = backend == "compare" and not args.no_pykalman_compare
     result = build_latent_soh_labels(
         plane_id=str(args.plane_id),
         timeseries_path=args.timeseries_path,
@@ -426,7 +379,6 @@ def main() -> None:
         output_dir=_resolve_output_dir(args.output_dir, str(args.plane_id)),
         q_day_sigma_pct=float(args.q_day_sigma_pct),
         spike_threshold_pct=float(args.spike_threshold_pct),
-        compare_backend=compare_backend,
         rt_profile=str(args.rt_profile),
     )
     print(json.dumps(result, indent=2, default=_json_default))
