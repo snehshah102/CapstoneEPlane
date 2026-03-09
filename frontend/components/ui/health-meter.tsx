@@ -4,7 +4,7 @@ import { AlertTriangle, CheckCircle2, ShieldAlert } from "lucide-react";
 
 type Props = {
   score: number;
-  label: "healthy" | "watch" | "critical";
+  label: "healthy" | "medium" | "watch" | "decline" | "critical";
   explanation: string;
 };
 
@@ -17,7 +17,17 @@ const labelMap = {
   watch: {
     title: "Watch",
     icon: AlertTriangle,
+    color: "text-orange-700"
+  },
+  medium: {
+    title: "Medium",
+    icon: AlertTriangle,
     color: "text-amber-700"
+  },
+  decline: {
+    title: "Watch",
+    icon: AlertTriangle,
+    color: "text-orange-700"
   },
   critical: {
     title: "Critical",

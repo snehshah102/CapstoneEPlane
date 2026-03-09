@@ -2,7 +2,15 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { addMonths, endOfMonth, formatISO, startOfMonth } from "date-fns";
+import {
+  addDays,
+  addMonths,
+  differenceInCalendarDays,
+  endOfMonth,
+  formatISO,
+  parseISO,
+  startOfMonth
+} from "date-fns";
 import {
   BatteryMedium,
   CalendarClock,
@@ -32,6 +40,7 @@ import { GlossarySection } from "@/components/ui/glossary-section";
 import { HealthMeter } from "@/components/ui/health-meter";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { GLOSSARY_FALLBACK } from "@/lib/glossary";
+import { SohTrendPoint } from "@/lib/contracts/schemas";
 import { formatPct } from "@/lib/utils";
 
 function monthString(date: Date) {
@@ -54,12 +63,67 @@ function monthOptions() {
   );
 }
 
+const TREND_WINDOWS: Array<{ value: "30d" | "90d" | "1y" | "full"; label: string }> = [
+  { value: "30d", label: "30d" },
+  { value: "90d", label: "90d" },
+  { value: "1y", label: "1y" },
+  { value: "full", label: "Full" }
+];
+
 type Props = {
   planeId: string;
 };
 
+type ForecastPoint = {
+  date: string;
+  soh: number;
+};
+
+function buildForecastPoints(
+  trendPoints: SohTrendPoint[],
+  replacementDatePred: string,
+  window: "30d" | "90d" | "1y" | "full"
+): ForecastPoint[] {
+  if (!trendPoints.length) {
+    return [];
+  }
+
+  const lastPoint = trendPoints[trendPoints.length - 1];
+  const lastDate = parseISO(lastPoint.date);
+  const replacementDate = parseISO(replacementDatePred);
+  if (Number.isNaN(lastDate.getTime()) || Number.isNaN(replacementDate.getTime())) {
+    return [];
+  }
+
+  const totalDaysToReplacement = differenceInCalendarDays(replacementDate, lastDate);
+  if (totalDaysToReplacement <= 0) {
+    return [];
+  }
+
+  const forecastWindowDays =
+    window === "30d" ? 30 : window === "90d" ? 90 : window === "1y" ? 365 : totalDaysToReplacement;
+  const projectionDays = Math.max(
+    1,
+    Math.min(totalDaysToReplacement, forecastWindowDays)
+  );
+
+  const points: ForecastPoint[] = [{ date: lastPoint.date, soh: lastPoint.soh }];
+  for (let day = 1; day <= projectionDays; day += 1) {
+    const date = addDays(lastDate, day);
+    const fraction = day / totalDaysToReplacement;
+    const projectedSoh = Math.max(0, Math.min(100, lastPoint.soh * (1 - fraction)));
+    points.push({
+      date: formatISO(date, { representation: "date" }),
+      soh: projectedSoh
+    });
+  }
+
+  return points;
+}
+
 export function PlaneDashboard({ planeId }: Props) {
   const [month, setMonth] = useState(monthString(new Date()));
+  const [trendWindow, setTrendWindow] = useState<"30d" | "90d" | "1y" | "full">("90d");
   const options = useMemo(() => monthOptions(), []);
 
   const healthQuery = useQuery({
@@ -68,8 +132,8 @@ export function PlaneDashboard({ planeId }: Props) {
     refetchInterval: 45_000
   });
   const trendQuery = useQuery({
-    queryKey: ["plane-trend", planeId, "90d"],
-    queryFn: () => getPlaneTrend(planeId, "90d")
+    queryKey: ["plane-trend", planeId, trendWindow],
+    queryFn: () => getPlaneTrend(planeId, trendWindow)
   });
   const predictionQuery = useQuery({
     queryKey: ["plane-prediction", planeId],
@@ -83,6 +147,19 @@ export function PlaneDashboard({ planeId }: Props) {
     queryKey: ["glossary"],
     queryFn: getGlossary
   });
+  const forecastPoints = useMemo(() => {
+    const trendPoints = trendQuery.data?.points ?? [];
+    const replacementDatePred =
+      predictionQuery.data?.prediction.forecast.replacementDatePred;
+    if (!replacementDatePred) {
+      return [] as ForecastPoint[];
+    }
+    return buildForecastPoints(trendPoints, replacementDatePred, trendWindow);
+  }, [
+    trendQuery.data?.points,
+    predictionQuery.data?.prediction.forecast.replacementDatePred,
+    trendWindow
+  ]);
 
   const airportCode =
     healthQuery.data?.health.lastFlight.departureAirport?.slice(0, 4) ?? "CYKF";
@@ -149,8 +226,12 @@ export function PlaneDashboard({ planeId }: Props) {
             tone={
               health.healthLabel === "healthy"
                 ? "ok"
-                : health.healthLabel === "watch"
+                : health.healthLabel === "medium"
                   ? "warn"
+                  : health.healthLabel === "watch"
+                    ? "risk"
+                    : health.healthLabel === "decline"
+                      ? "risk"
                   : "risk"
             }
           >
@@ -324,13 +405,35 @@ export function PlaneDashboard({ planeId }: Props) {
 
       <section className="grid gap-4 xl:grid-cols-2">
         <Card>
-          <h2 className="mb-1 font-[var(--font-heading)] text-lg text-slate-900">
-            SOH History (90d)
-          </h2>
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <h2 className="font-[var(--font-heading)] text-lg text-slate-900">
+              SOH History ({TREND_WINDOWS.find((item) => item.value === trendWindow)?.label ?? "90d"})
+            </h2>
+            <div className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
+              {TREND_WINDOWS.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setTrendWindow(item.value)}
+                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${
+                    trendWindow === item.value
+                      ? "bg-blue-600 text-white"
+                      : "text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <p className="mb-3 text-xs text-muted">
-            This trend line will be replaced by your backend model series later.
+            Solid line = observed latent SOH history. Dashed line = projected SOH forecast.
           </p>
-          <SohLineChart points={trendQuery.data.points} />
+          <SohLineChart
+            points={trendQuery.data.points}
+            forecastPoints={forecastPoints}
+            window={trendWindow}
+          />
         </Card>
         <Card>
           <h2 className="mb-1 font-[var(--font-heading)] text-lg text-slate-900">

@@ -57,7 +57,7 @@ export function getPlaneHealth(planeId: string) {
   );
 }
 
-export function getPlaneTrend(planeId: string, window: "30d" | "90d" | "1y") {
+export function getPlaneTrend(planeId: string, window: "30d" | "90d" | "1y" | "full") {
   return fetchAndParse(
     `/api/v1/planes/${planeId}/soh-trend?window=${window}`,
     SohTrendResponseSchema

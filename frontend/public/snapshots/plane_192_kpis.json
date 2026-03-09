@@ -1,42 +1,43 @@
 {
   "health": {
     "planeId": "192",
-    "updatedAt": "2026-03-02T03:38:05+00:00",
-    "sohCurrent": 83.48,
-    "sohTrend30": -5.727,
-    "sohTrend90": -6.02,
+    "updatedAt": "2026-03-07T03:34:01.451594+00:00",
+    "sohCurrent": 97.14309331774568,
+    "sohTrend30": -2.1065137578056863,
+    "sohTrend90": -2.8438743592983258,
     "riskBand": "low",
-    "healthScore": 83.48,
+    "healthScore": 97.14309331774568,
     "healthLabel": "healthy",
-    "healthExplanation": "Battery condition looks healthy for typical training operations.",
+    "healthExplanation": "Battery condition is healthy with low degradation signals.",
     "metricsExplainabilityVersion": "v1",
-    "confidence": 0.88,
+    "confidence": 0.8,
+    "currentChargeSoc": 29.0,
     "pack": {
-      "voltage": 386.0,
-      "current": 12.0,
-      "tempAvg": 24.0,
-      "soc": 77.0
+      "voltage": 347.8263537906138,
+      "current": 0.0,
+      "tempAvg": 25.812274368231048,
+      "soc": 29.0
     },
     "lastFlight": {
       "flightId": 11153,
       "eventDate": "2025-07-04",
-      "route": "Kitchener/Waterloo to Kitchener/Waterloo",
-      "departureAirport": "CYKF - Kitchener/Waterloo",
-      "destinationAirport": "CYKF - Kitchener/Waterloo",
-      "durationMin": 55,
+      "route": "Unknown route",
+      "departureAirport": null,
+      "destinationAirport": null,
+      "durationMin": 71.69617625000001,
       "eventType": "flight"
     }
   },
   "prediction": {
     "planeId": "192",
     "forecast": {
-      "replacementDatePred": "2028-10-19",
-      "rulDaysPred": 962,
-      "rulCyclesPred": 692,
-      "confidence": 0.88
+      "replacementDatePred": "2026-12-26",
+      "rulDaysPred": 294,
+      "rulCyclesPred": 373,
+      "confidence": 0.89
     },
-    "sohTargetBlend": 83.615,
-    "sohProxyPoh": 84.38,
-    "sohObservedNorm": 82.68
+    "sohTargetBlend": 97.14309331774568,
+    "sohProxyPoh": 97.14309331774568,
+    "sohObservedNorm": 95.0
   }
 }

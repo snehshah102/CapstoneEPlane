@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-export const RiskBandSchema = z.enum(["low", "medium", "high"]);
+export const RiskBandSchema = z.enum(["low", "medium", "watch", "critical", "decline", "high"]);
 export const ConfidenceTierSchema = z.enum(["high", "medium", "low"]);
-export const HealthLabelSchema = z.enum(["healthy", "watch", "critical"]);
+export const HealthLabelSchema = z.enum(["healthy", "medium", "watch", "decline", "critical"]);
 export const WeatherModeSchema = z.enum(["live", "mixed", "fallback"]);
 export const ChargingCostSourceModeSchema = z.enum(["live", "fallback"]);
 export const MissionGameStatusSchema = z.enum([
@@ -282,7 +282,7 @@ export const PlaneHealthResponseSchema = z.object({
 
 export const SohTrendResponseSchema = z.object({
   planeId: z.string(),
-  window: z.enum(["30d", "90d", "1y"]),
+  window: z.enum(["30d", "90d", "1y", "full"]),
   points: z.array(SohTrendPointSchema)
 });
 

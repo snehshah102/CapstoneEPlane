@@ -2,11 +2,29 @@ import { promises as fs } from "fs";
 import path from "path";
 
 const SNAPSHOT_DIR = path.join(process.cwd(), "public", "snapshots");
+const PARSE_RETRY_DELAY_MS = 30;
+
+function isSyntaxError(error: unknown): boolean {
+  return error instanceof SyntaxError;
+}
+
+async function wait(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 async function readJson<T>(filename: string): Promise<T> {
   const fullPath = path.join(SNAPSHOT_DIR, filename);
-  const raw = await fs.readFile(fullPath, "utf8");
-  return JSON.parse(raw) as T;
+  try {
+    const raw = await fs.readFile(fullPath, "utf8");
+    return JSON.parse(raw) as T;
+  } catch (error) {
+    if (!isSyntaxError(error)) {
+      throw error;
+    }
+    await wait(PARSE_RETRY_DELAY_MS);
+    const retryRaw = await fs.readFile(fullPath, "utf8");
+    return JSON.parse(retryRaw) as T;
+  }
 }
 
 export async function readPlanesSnapshot() {
@@ -22,6 +40,12 @@ export async function readPlaneKpisSnapshot(planeId: string) {
 export async function readPlaneTrendSnapshot(planeId: string) {
   return readJson<{ planeId: string; points: unknown[] }>(
     `plane_${planeId}_soh_trend.json`
+  );
+}
+
+export async function readPlaneHistorySnapshot(planeId: string) {
+  return readJson<{ planeId: string; points: unknown[] }>(
+    `plane_${planeId}_soh_history.json`
   );
 }
 
@@ -42,8 +66,9 @@ export async function readPlaneRecommendationsSnapshot(
   );
 
   try {
-    const raw = await fs.readFile(preferred, "utf8");
-    return JSON.parse(raw) as { recommendations: unknown };
+    return await readJson<{ recommendations: unknown }>(
+      `plane_${planeId}_recommendations_${normalizedMonth}.json`
+    );
   } catch {
     const entries = await fs.readdir(SNAPSHOT_DIR);
     const fallbackFile = entries.find(
@@ -65,8 +90,9 @@ export async function readGlossarySnapshot() {
 export async function readLearnBaselineSnapshot(planeId: string) {
   const preferred = path.join(SNAPSHOT_DIR, `learn_baseline_plane_${planeId}.json`);
   try {
-    const raw = await fs.readFile(preferred, "utf8");
-    return JSON.parse(raw) as { baseline: unknown };
+    return await readJson<{ baseline: unknown }>(
+      `learn_baseline_plane_${planeId}.json`
+    );
   } catch {
     const entries = await fs.readdir(SNAPSHOT_DIR);
     const fallbackFile = entries.find(

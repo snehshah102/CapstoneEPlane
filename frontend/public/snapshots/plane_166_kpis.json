@@ -1,42 +1,43 @@
 {
   "health": {
     "planeId": "166",
-    "updatedAt": "2026-03-02T03:38:05+00:00",
-    "sohCurrent": 73.949,
-    "sohTrend30": -0.023,
-    "sohTrend90": -0.023,
+    "updatedAt": "2026-03-07T03:34:01.400990+00:00",
+    "sohCurrent": 57.621574012832376,
+    "sohTrend30": 1.8080634776489788,
+    "sohTrend90": -3.622498945125173,
     "riskBand": "medium",
-    "healthScore": 73.95,
-    "healthLabel": "watch",
-    "healthExplanation": "Battery condition is usable, but wear signals should be monitored closely.",
+    "healthScore": 57.621574012832376,
+    "healthLabel": "medium",
+    "healthExplanation": "Battery condition is in the medium band; monitor stress and charging behavior.",
     "metricsExplainabilityVersion": "v1",
-    "confidence": 0.84,
+    "confidence": 0.8,
+    "currentChargeSoc": 96.0,
     "pack": {
-      "voltage": 386.0,
-      "current": 12.0,
-      "tempAvg": 24.0,
-      "soc": 77.0
+      "voltage": 380.36348575215374,
+      "current": 2.345659377070908,
+      "tempAvg": 23.870112657389,
+      "soc": 96.0
     },
     "lastFlight": {
-      "flightId": 12683,
-      "eventDate": "2025-11-22",
-      "route": "Kitchener/Waterloo to Kitchener/Waterloo",
-      "departureAirport": "CYKF - Kitchener/Waterloo",
-      "destinationAirport": "CYKF - Kitchener/Waterloo",
-      "durationMin": 29,
+      "flightId": 12564,
+      "eventDate": "2025-11-06",
+      "route": "Unknown route",
+      "departureAirport": null,
+      "destinationAirport": null,
+      "durationMin": 54.79632175,
       "eventType": "flight"
     }
   },
   "prediction": {
     "planeId": "166",
     "forecast": {
-      "replacementDatePred": "2028-02-23",
-      "rulDaysPred": 723,
-      "rulCyclesPred": 520,
-      "confidence": 0.84
+      "replacementDatePred": "2027-04-07",
+      "rulDaysPred": 396,
+      "rulCyclesPred": 243,
+      "confidence": 0.8400000000000001
     },
-    "sohTargetBlend": 74.084,
-    "sohProxyPoh": 74.849,
-    "sohObservedNorm": 73.149
+    "sohTargetBlend": 57.621574012832376,
+    "sohProxyPoh": 57.621574012832376,
+    "sohObservedNorm": 53.0
   }
 }

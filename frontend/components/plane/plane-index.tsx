@@ -11,9 +11,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 
-function healthFromRisk(riskBand: "low" | "medium" | "high") {
+function healthFromRisk(
+  riskBand: "low" | "medium" | "watch" | "critical" | "decline" | "high"
+) {
   if (riskBand === "low") return { label: "Healthy", tone: "ok" as const };
-  if (riskBand === "medium") return { label: "Watch", tone: "warn" as const };
+  if (riskBand === "medium") return { label: "Medium", tone: "warn" as const };
+  if (riskBand === "watch") return { label: "Watch", tone: "risk" as const };
+  if (riskBand === "decline") return { label: "Watch", tone: "risk" as const };
+  if (riskBand === "high") return { label: "Watch", tone: "risk" as const };
   return { label: "Critical", tone: "risk" as const };
 }
 
