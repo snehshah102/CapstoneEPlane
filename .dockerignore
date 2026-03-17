@@ -1,0 +1,13 @@
+.git
+.gitignore
+**/.DS_Store
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.log
+frontend/.next
+frontend/node_modules
+frontend/test-results
+frontend/devserver-3001.log
+frontend/devserver-3005.log
+frontend/devserver-3006.log

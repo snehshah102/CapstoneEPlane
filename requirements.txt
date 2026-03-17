@@ -1,0 +1,5 @@
+joblib==1.5.1
+numpy==2.3.3
+pandas==2.3.2
+pyarrow==21.0.0
+scikit-learn==1.7.2
