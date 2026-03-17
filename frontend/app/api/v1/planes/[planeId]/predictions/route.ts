@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
 
 import { PredictionsResponseSchema } from "@/lib/contracts/schemas";
-import { getLivePlanePayload } from "@/lib/live-plane-service";
+import { getLivePredictionPayload } from "@/lib/live-prediction-service";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ planeId: string }> }
 ) {
   const { planeId } = await params;
-  const live = await getLivePlanePayload(planeId);
-  const payload = PredictionsResponseSchema.parse({ prediction: live.prediction });
+  const live = await getLivePredictionPayload(planeId);
+  const payload = PredictionsResponseSchema.parse(live);
   return NextResponse.json(payload);
 }
 

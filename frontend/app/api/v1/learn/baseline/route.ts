@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { LearnBaselineResponseSchema } from "@/lib/contracts/schemas";
-import { readLearnBaselineSnapshot } from "@/lib/snapshot-store";
+import { getLearnBaselinePayload } from "@/lib/live-learn-service";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const planeId = searchParams.get("planeId") ?? "166";
-  const data = await readLearnBaselineSnapshot(planeId);
-  const payload = LearnBaselineResponseSchema.parse(data);
+  const payload = await getLearnBaselinePayload(planeId);
   return NextResponse.json(payload);
 }
 

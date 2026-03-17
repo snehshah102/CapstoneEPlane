@@ -16,6 +16,12 @@ type Props = {
   window?: "30d" | "90d" | "1y" | "full";
 };
 
+function formatTooltipValue(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value)
+    ? `${value.toFixed(2)}%`
+    : "--";
+}
+
 export function SohLineChart({
   points,
   forecastPoints = [],
@@ -49,7 +55,7 @@ export function SohLineChart({
     const values = [
       ...points.map((point) => point.soh),
       ...forecastPoints.map((point) => point.soh)
-    ];
+    ].filter((value) => Number.isFinite(value));
     if (!values.length) {
       return { min: 0, max: 100 };
     }
@@ -77,7 +83,10 @@ export function SohLineChart({
     () => ({
       animation: false,
       textStyle: { color: "#1e293b" },
-      tooltip: { trigger: "axis", valueFormatter: (value: number) => `${value.toFixed(2)}%` },
+      tooltip: {
+        trigger: "axis",
+        valueFormatter: formatTooltipValue
+      },
       legend: {
         top: 0,
         textStyle: { color: "#334155", fontSize: 11 }

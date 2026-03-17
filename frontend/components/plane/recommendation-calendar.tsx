@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   ChargePlanSuggestion,
@@ -13,6 +13,8 @@ type Props = {
   days: FlightDayScore[];
   breakdownByDate: Record<string, ScoreBreakdown>;
   chargePlan: ChargePlanSuggestion[];
+  selectedDate?: string | null;
+  onSelectedDateChange?: (date: string) => void;
 };
 
 type CalendarCell = {
@@ -44,11 +46,27 @@ function rationaleFromBreakdown(breakdown: ScoreBreakdown | null) {
 export function RecommendationCalendar({
   days,
   breakdownByDate,
-  chargePlan
+  chargePlan,
+  selectedDate,
+  onSelectedDateChange
 }: Props) {
-  const [selectedDate, setSelectedDate] = useState<string | null>(
+  const [internalSelectedDate, setInternalSelectedDate] = useState<string | null>(
     days[0]?.date ?? null
   );
+  const activeSelectedDate = selectedDate ?? internalSelectedDate;
+
+  useEffect(() => {
+    if (selectedDate !== undefined) {
+      return;
+    }
+    if (!days.length) {
+      setInternalSelectedDate(null);
+      return;
+    }
+    setInternalSelectedDate((current) =>
+      current && days.some((day) => day.date === current) ? current : days[0].date
+    );
+  }, [days, selectedDate]);
 
   const cells = useMemo<CalendarCell[]>(() => {
     if (days.length === 0) return [];
@@ -67,14 +85,21 @@ export function RecommendationCalendar({
   }, [days]);
 
   const selected =
-    selectedDate && days.length
-      ? days.find((day) => day.date === selectedDate) ?? null
+    activeSelectedDate && days.length
+      ? days.find((day) => day.date === activeSelectedDate) ?? null
       : null;
   const breakdown = selected ? breakdownByDate[selected.date] : null;
   const plannedCharge = selected
     ? chargePlan.find((item) => item.date === selected.date) ?? null
     : null;
   const rationale = rationaleFromBreakdown(breakdown);
+
+  function handleDateSelect(date: string) {
+    onSelectedDateChange?.(date);
+    if (selectedDate === undefined) {
+      setInternalSelectedDate(date);
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -89,11 +114,11 @@ export function RecommendationCalendar({
             <button
               key={cell.date}
               type="button"
-              onClick={() => setSelectedDate(cell.date)}
+              onClick={() => handleDateSelect(cell.date)}
               className={`rounded-xl border p-2 text-left transition hover:brightness-105 ${scoreClass(
                 cell.score
               )} ${
-                selectedDate === cell.date
+                activeSelectedDate === cell.date
                   ? "ring-2 ring-blue-400"
                   : "ring-0 ring-transparent"
               }`}

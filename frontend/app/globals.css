@@ -45,13 +45,8 @@ body {
   animation: fadeUp 0.5s ease-out both;
 }
 
-.plane-rotate {
-  transform-style: preserve-3d;
-  animation: planeOrbit 10s ease-in-out infinite;
-}
-
-.plane-rotate-paused {
-  animation-play-state: paused;
+.route-shell {
+  animation: routeEnter 220ms ease-out both;
 }
 
 @keyframes fadeUp {
@@ -65,20 +60,20 @@ body {
   }
 }
 
-@keyframes planeOrbit {
-  0% {
-    transform: perspective(1200px) rotateY(-12deg);
+@keyframes routeEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
-  25% {
-    transform: perspective(1200px) rotateY(10deg);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  50% {
-    transform: perspective(1200px) rotateY(0deg);
-  }
-  75% {
-    transform: perspective(1200px) rotateY(-9deg);
-  }
-  100% {
-    transform: perspective(1200px) rotateY(-12deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-up,
+  .route-shell {
+    animation: none;
   }
 }

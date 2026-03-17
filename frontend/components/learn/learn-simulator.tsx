@@ -1,11 +1,17 @@
 "use client";
 
 import ReactECharts from "echarts-for-react";
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useDeferredValue, useMemo, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { PlaneTakeoff } from "lucide-react";
 
-import { getGlossary, getLearnBaseline, getPlanes } from "@/lib/adapters/api-client";
+import {
+  evaluateLearnScenario,
+  getGlossary,
+  getLearnBaseline,
+  getPlanes
+} from "@/lib/adapters/api-client";
+import type { LearnBaseline, LearnEvaluation, PlaneSummary } from "@/lib/contracts/schemas";
 import { HealthMeter } from "@/components/ui/health-meter";
 import { Card } from "@/components/ui/card";
 import { GlossarySection } from "@/components/ui/glossary-section";
@@ -26,10 +32,7 @@ type ControlKey =
   | "cellImbalanceSeverity"
   | "socEstimatorUncertainty";
 
-const controlMeta: Record<
-  ControlKey,
-  { label: string; min: number; max: number; step: number }
-> = {
+const controlMeta: Record<ControlKey, { label: string; min: number; max: number; step: number }> = {
   ambientTempC: { label: "Ambient Temperature (C)", min: -10, max: 45, step: 1 },
   flightDurationMin: { label: "Flight Duration (min)", min: 15, max: 120, step: 1 },
   expectedPowerKw: { label: "Expected Power (kW)", min: 15, max: 65, step: 1 },
@@ -49,28 +52,34 @@ const controlMeta: Record<
   socEstimatorUncertainty: { label: "SOC Estimator Uncertainty", min: 0, max: 100, step: 1 }
 };
 
-function healthLabel(score: number): "healthy" | "watch" | "critical" {
-  if (score >= 75) return "healthy";
-  if (score >= 55) return "watch";
-  return "critical";
-}
+type Props = {
+  initialPlanes?: PlaneSummary[];
+  initialBaseline?: LearnBaseline;
+  initialEvaluation?: LearnEvaluation;
+};
 
-function labelExplanation(label: "healthy" | "watch" | "critical") {
-  if (label === "healthy") {
-    return "Low projected stress profile under current settings.";
-  }
-  if (label === "watch") {
-    return "Moderate stress profile. Consider reducing high-SOC dwell and weather exposure.";
-  }
-  return "High stress profile. Shift operation plan and charging strategy.";
-}
-
-export function LearnSimulator() {
+export function LearnSimulator({
+  initialPlanes,
+  initialBaseline,
+  initialEvaluation
+}: Props) {
   const [planeId, setPlaneId] = useState("166");
-  const planesQuery = useQuery({ queryKey: ["planes"], queryFn: getPlanes });
+  const planesQuery = useQuery({
+    queryKey: ["planes"],
+    queryFn: getPlanes,
+    initialData: initialPlanes ? { planes: initialPlanes } : undefined,
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false
+  });
   const baselineQuery = useQuery({
     queryKey: ["learn-baseline", planeId],
-    queryFn: () => getLearnBaseline(planeId)
+    queryFn: () => getLearnBaseline(planeId),
+    initialData: planeId === initialBaseline?.planeId && initialBaseline
+      ? { baseline: initialBaseline, evaluation: initialEvaluation }
+      : undefined,
+    placeholderData: keepPreviousData,
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false
   });
   const glossaryQuery = useQuery({
     queryKey: ["glossary"],
@@ -78,7 +87,6 @@ export function LearnSimulator() {
   });
 
   const baselineInputs = baselineQuery.data?.baseline.baselineInputs;
-  const baselineOutputs = baselineQuery.data?.baseline.baselineOutputs;
   const [inputs, setInputs] = useState<Record<string, number> | null>(null);
 
   const currentInputs = useMemo(() => {
@@ -86,79 +94,29 @@ export function LearnSimulator() {
     if (!baselineInputs) return null;
     return { ...baselineInputs };
   }, [baselineInputs, inputs]);
-
-  const computed = useMemo(() => {
-    if (!currentInputs || !baselineOutputs || !baselineInputs) return null;
-
-    const tempPenalty = Math.abs(currentInputs.ambientTempC - 21) * 0.12;
-    const durationPenalty = (currentInputs.flightDurationMin - 45) * 0.045;
-    const powerPenalty = (currentInputs.expectedPowerKw - 28) * 0.06;
-    const weatherPenalty =
-      currentInputs.windSeverity * 0.014 +
-      currentInputs.precipitationSeverity * 0.01;
-    const chargingPenalty =
-      Math.max(0, currentInputs.chargeTargetSoc - 80) * 0.025 +
-      currentInputs.chargeLeadHours * 0.012 +
-      currentInputs.highSocIdleHours * 0.02;
-    const operationsPenalty = currentInputs.flightsPerWeek * 0.03;
-    const systemPenalty =
-      (100 - currentInputs.thermalManagementQuality) * 0.012 +
-      currentInputs.cellImbalanceSeverity * 0.01 +
-      currentInputs.socEstimatorUncertainty * 0.008;
-
-    const totalPenalty =
-      tempPenalty +
-      durationPenalty +
-      powerPenalty +
-      weatherPenalty +
-      chargingPenalty +
-      operationsPenalty +
-      systemPenalty;
-
-    const sohImpactDelta = Number((-0.05 - totalPenalty * 0.2).toFixed(2));
-    const score = Number(
-      Math.max(0, Math.min(100, baselineOutputs.healthScore - totalPenalty)).toFixed(2)
-    );
-    const label = healthLabel(score);
-    const rulShift = Number((-totalPenalty * 6).toFixed(1));
-    const expectedRangeKm = Number(
-      Math.max(
-        55,
-        250 *
-          (score / 100) *
-          (currentInputs.chargeTargetSoc / 100) *
-          (1 - currentInputs.windSeverity / 280)
-      ).toFixed(1)
-    );
-
-    return {
-      sohImpactDelta,
-      healthScore: score,
-      healthLabel: label,
-      healthExplanation: labelExplanation(label),
-      rulDaysShift: rulShift,
-      expectedRangeKm,
-      recommendationSummary:
-        label === "healthy"
-          ? "Profile is battery-friendly. Keep this operation plan."
-          : label === "watch"
-            ? "Profile is acceptable but could improve with lower SOC target and shorter lead time."
-            : "Profile is high stress. Reduce charge target and avoid long high-SOC idle windows."
-    };
-  }, [baselineInputs, baselineOutputs, currentInputs]);
+  const deferredInputs = useDeferredValue(currentInputs);
+  const evaluationQuery = useQuery({
+    queryKey: ["learn-evaluate", planeId, deferredInputs],
+    queryFn: () => evaluateLearnScenario(planeId, deferredInputs),
+    enabled: Boolean(inputs && deferredInputs),
+    placeholderData: keepPreviousData
+  });
+  const resolvedEvaluation = inputs
+    ? evaluationQuery.data?.evaluation ?? baselineQuery.data?.evaluation ?? initialEvaluation
+    : baselineQuery.data?.evaluation ?? initialEvaluation;
+  const computed = resolvedEvaluation?.outputs ?? null;
 
   const trajectoryOption = useMemo(() => {
-    if (!computed || !baselineOutputs) return null;
-    const x = Array.from({ length: 12 }, (_, i) => `W${i + 1}`);
-    const baseline = x.map(() => Number(baselineOutputs.healthScore.toFixed(1)));
-    const simulated = x.map((_, i) =>
-      Number(Math.max(0, computed.healthScore + computed.sohImpactDelta * (i * 0.5)).toFixed(1))
-    );
+    if (!resolvedEvaluation) return null;
     return {
       animation: false,
       tooltip: { trigger: "axis" },
       legend: { data: ["Baseline", "Simulated"], textStyle: { color: "#475569" } },
-      xAxis: { type: "category", data: x, axisLabel: { color: "#64748b" } },
+      xAxis: {
+        type: "category",
+        data: resolvedEvaluation.trajectory.map((point) => point.label),
+        axisLabel: { color: "#64748b" }
+      },
       yAxis: {
         type: "value",
         min: 0,
@@ -171,25 +129,70 @@ export function LearnSimulator() {
           name: "Baseline",
           type: "line",
           smooth: true,
-          data: baseline,
+          data: resolvedEvaluation.trajectory.map((point) => point.baseline),
           lineStyle: { color: "#94a3b8", width: 2 }
         },
         {
           name: "Simulated",
           type: "line",
           smooth: true,
-          data: simulated,
+          data: resolvedEvaluation.trajectory.map((point) => point.simulated),
           lineStyle: { color: "#2563eb", width: 3 },
           areaStyle: { color: "rgba(37,99,235,0.12)" }
         }
       ]
     };
-  }, [baselineOutputs, computed]);
+  }, [resolvedEvaluation]);
 
-  if (planesQuery.isLoading || baselineQuery.isLoading || !currentInputs || !computed) {
-    return <div className="text-sm text-muted">Loading learn simulator...</div>;
+  if (!planesQuery.data || !baselineQuery.data || !currentInputs || !computed) {
+    return (
+      <main className="space-y-6">
+        <section className="space-y-2">
+          <div className="h-10 w-64 animate-pulse rounded-2xl bg-slate-200/80" />
+          <div className="h-5 w-[28rem] max-w-full animate-pulse rounded-xl bg-slate-100" />
+        </section>
+
+        <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+          <Card className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="h-7 w-44 animate-pulse rounded-xl bg-slate-200/80" />
+              <div className="h-9 w-44 animate-pulse rounded-full bg-slate-100" />
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="rounded-xl border border-stone-200 bg-white/75 p-3">
+                  <div className="h-4 w-32 animate-pulse rounded bg-slate-200/80" />
+                  <div className="mt-4 h-3 w-full animate-pulse rounded-full bg-slate-100" />
+                  <div className="mt-3 h-5 w-10 animate-pulse rounded bg-slate-200/80" />
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          <Card className="space-y-4">
+            <div className="h-7 w-52 animate-pulse rounded-xl bg-slate-200/80" />
+            <div className="h-2.5 w-full animate-pulse rounded-full bg-slate-100" />
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-12 animate-pulse rounded-xl border border-stone-200 bg-stone-50"
+              />
+            ))}
+            <div className="rounded-2xl border border-blue-100 bg-blue-50/65 p-4">
+              <div className="h-4 w-32 animate-pulse rounded bg-blue-100" />
+              <div className="mt-3 h-8 w-48 animate-pulse rounded-xl bg-white/80" />
+              <div className="mt-4 h-10 animate-pulse rounded-full bg-white/90" />
+            </div>
+          </Card>
+        </section>
+      </main>
+    );
   }
-  if (planesQuery.isError || baselineQuery.isError || !baselineQuery.data) {
+  if (
+    (planesQuery.isError && !planesQuery.data) ||
+    (baselineQuery.isError && !baselineQuery.data) ||
+    (evaluationQuery.isError && !resolvedEvaluation)
+  ) {
     return <div className="text-sm text-rose-600">Learn simulator data unavailable.</div>;
   }
 
@@ -197,6 +200,7 @@ export function LearnSimulator() {
     (item) => ["soh", "rul", "risk", "confidence"].includes(item.id)
   );
   const planeProgress = Math.max(8, Math.min(100, (computed.expectedRangeKm / 250) * 100));
+  const outputsBusy = evaluationQuery.isFetching;
 
   return (
     <main className="space-y-6">
@@ -275,6 +279,9 @@ export function LearnSimulator() {
               whyItMatters="Students can see which factors move SOH and RUL most."
             />
           </div>
+          <p className="text-xs text-slate-500">
+            {outputsBusy ? "Refreshing live scenario..." : "Live scenario outputs update from the current plane state."}
+          </p>
           <HealthMeter
             score={computed.healthScore}
             label={computed.healthLabel}
@@ -294,7 +301,7 @@ export function LearnSimulator() {
           </div>
 
           <div className="rounded-2xl border border-blue-100 bg-blue-50/65 p-4">
-            <p className="text-xs uppercase tracking-wide text-muted">Mock Mission Reach</p>
+            <p className="text-xs uppercase tracking-wide text-muted">Estimated Mission Reach</p>
             <p className="text-2xl font-semibold text-slate-900">
               {computed.expectedRangeKm} km estimated range
             </p>
@@ -325,8 +332,8 @@ export function LearnSimulator() {
               Show model assumptions
             </summary>
             <p className="mt-2 text-xs text-muted">
-              This simulator uses transparent weighting to show how operations,
-              weather, and charging behavior influence projected SOH and RUL.
+              Learn outputs are now anchored to live plane health, current forecast confidence,
+              and model-backed SOH trajectory data for the selected aircraft.
             </p>
           </details>
         </Card>

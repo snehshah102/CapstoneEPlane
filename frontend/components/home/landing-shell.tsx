@@ -1,48 +1,86 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Battery, CalendarDays, Gauge } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { GlossarySection } from "@/components/ui/glossary-section";
+import { ELECTRIC_PLANE_MEDIA } from "@/lib/electric-plane-media";
 import { GLOSSARY_FALLBACK } from "@/lib/glossary";
 
 function ElectricPlaneVisual({ compact = false }: { compact?: boolean }) {
+  const media = compact ? ELECTRIC_PLANE_MEDIA.campus : ELECTRIC_PLANE_MEDIA.hero;
+  const bullets = compact
+    ? [
+        "Aircraft-level context helps explain why endurance and reserve margins change from one day to the next.",
+        "Charging timing and flight cadence directly affect degradation and turnaround readiness.",
+        "Operations, maintenance, and student pilots all need the same picture of battery health before dispatch."
+      ]
+    : [
+        "Monitor state of health, recent decline, and replacement outlook at the aircraft level.",
+        "Coordinate flight timing with weather, charging windows, and expected wear impact.",
+        "Turn battery telemetry into maintenance and operational planning instead of raw data review."
+      ];
+
   return (
-    <div
-      className={`overflow-hidden rounded-[28px] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-blue-50 shadow-glass ${compact ? "p-4" : "p-6"}`}
-    >
-      <svg viewBox="0 0 760 380" className={`${compact ? "h-52" : "h-[340px]"} w-full`}>
-        <defs>
-          <linearGradient id="hull" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#f8fbff" />
-            <stop offset="100%" stopColor="#d7e5ff" />
-          </linearGradient>
-          <linearGradient id="wing" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#6ea8ff" stopOpacity="0.25" />
-            <stop offset="100%" stopColor="#2563eb" stopOpacity="0.8" />
-          </linearGradient>
-          <linearGradient id="engine" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#1d4ed8" />
-            <stop offset="100%" stopColor="#0ea5e9" />
-          </linearGradient>
-        </defs>
-        <ellipse cx="378" cy="320" rx="262" ry="26" fill="#b8c5db" opacity="0.32" />
-        <path d="M120 224 L310 186 L567 175 L654 195 L573 212 L312 220 Z" fill="url(#wing)" />
-        <path
-          d="M162 206 C188 146, 295 116, 438 124 C520 128, 586 149, 627 184 C638 193, 638 208, 627 217 C584 248, 518 269, 434 274 C291 282, 188 248, 162 206Z"
-          fill="url(#hull)"
-        />
-        <circle cx="452" cy="201" r="31" fill="#173c78" />
-        <circle cx="452" cy="201" r="21" fill="url(#engine)" />
-        <circle cx="452" cy="201" r="9" fill="#cffafe" opacity="0.88" />
-        <path d="M245 182 L182 122 L257 165 Z" fill="#a6b3ca" />
-        <path d="M253 240 L178 295 L286 250 Z" fill="#98a9c5" />
-        <path d="M563 176 L634 133 L594 186 Z" fill="#dbe8ff" />
-        <path d="M562 222 L636 251 L593 214 Z" fill="#c7dcff" />
-        <rect x="145" y="232" width="92" height="9" rx="4.5" fill="#1e40af" opacity="0.26" />
-      </svg>
-    </div>
+    <figure className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-glass">
+      <div
+        className={`grid gap-0 ${compact ? "lg:grid-cols-[1.18fr_0.82fr]" : "lg:grid-cols-[1.08fr_0.92fr]"}`}
+      >
+        <div
+          className={`${compact ? "p-6" : "p-7 md:p-8"} flex flex-col justify-between bg-gradient-to-br from-white via-slate-50 to-blue-50`}
+        >
+          <div className="space-y-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Aircraft Platform
+            </p>
+            <div>
+              <h3 className="font-[var(--font-heading)] text-2xl text-slate-900">
+                {compact ? "Operational electric aircraft context" : media.title}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                {compact
+                  ? "Aircraft configuration, turnaround rhythm, and daily operating margin all shape how an electric fleet should be scheduled and maintained."
+                  : "AeroCell connects battery condition, aircraft utilization, and operating environment so teams can make better dispatch and maintenance decisions."}
+              </p>
+            </div>
+            <div className="grid gap-3">
+              {bullets.map((item) => (
+                <div
+                  key={item}
+                  className="rounded-2xl border border-slate-200 bg-white/85 px-4 py-3 text-sm text-slate-700"
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+          <a
+            href={media.creditHref}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-5 text-xs text-slate-500 underline-offset-4 hover:text-slate-700 hover:underline"
+          >
+            Photo source: {media.creditLabel}
+          </a>
+        </div>
+        <div className="relative min-h-[280px] bg-slate-100">
+          <Image
+            src={media.src}
+            alt={media.alt}
+            fill
+            priority={!compact}
+            sizes={compact ? "(max-width: 1024px) 100vw, 50vw" : "(max-width: 1280px) 100vw, 50vw"}
+            className={`object-cover ${compact ? "object-[42%_52%]" : "object-[44%_45%]"}`}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/10 to-transparent" />
+          <div className="absolute bottom-4 left-4 rounded-full bg-white/92 px-3 py-1 text-xs font-medium text-slate-700 shadow-sm">
+            {media.subtitle}
+          </div>
+        </div>
+      </div>
+    </figure>
   );
 }
 
@@ -62,17 +100,17 @@ export function LandingShell() {
         </h1>
         <p className="mx-auto max-w-2xl text-balance text-base leading-relaxed text-slate-600">
           Track battery health, predict remaining useful life, and get flight-day
-          recommendations with a smooth, student-friendly interface.
+          recommendations.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link href="/planes" prefetch={false}>
-            <Button className="gap-2">
+          <Link href="/planes">
+            <Button className="gap-2 transition duration-200 hover:-translate-y-0.5 hover:shadow-lg">
               Open Planes
               <ArrowRight size={16} />
             </Button>
           </Link>
-          <Link href="/mission-game" prefetch={false}>
-            <Button className="bg-white text-slate-900 ring-1 ring-slate-300 hover:bg-slate-50">
+          <Link href="/mission-game">
+            <Button className="bg-white text-slate-900 ring-1 ring-slate-300 transition duration-200 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md">
               Open FlightLab
             </Button>
           </Link>
@@ -106,31 +144,31 @@ export function LandingShell() {
               Explainable Insights
             </p>
             <p className="mt-1 text-sm text-slate-600">
-              Clear definitions and rationale made for student presentations.
+              Clear definitions and rationale for pilots, operators, and maintenance planning.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="fade-up grid gap-6 md:grid-cols-2">
+      <section className="fade-up grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
         <ElectricPlaneVisual compact />
-        <div className="rounded-[28px] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-emerald-50 p-6 shadow-glass">
+        <div className="self-start rounded-[28px] border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-emerald-50 p-6 shadow-glass">
           <h2 className="font-[var(--font-heading)] text-2xl text-slate-900">
             Why This Platform Matters
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-slate-600">
-            Electric aircraft viability depends on battery reliability, efficient operations,
-            and confident maintenance planning. AeroCell brings those decisions into one view.
+            Electric aircraft operations depend on more than charge level alone. AeroCell brings
+            battery health, forecast wear, daily conditions, and scheduling decisions into one view.
           </p>
           <div className="mt-5 grid gap-3">
             <div className="rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700">
-              Track health trends over time to identify wear early.
+              Review aircraft health trends early enough to act before availability is affected.
             </div>
             <div className="rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700">
-              Plan charging windows and flight days to reduce avoidable stress.
+              Schedule charging and flight windows with a better view of thermal and weather exposure.
             </div>
             <div className="rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm text-slate-700">
-              Translate telemetry into clear actions students and pilots can use.
+              Support dispatch, maintenance planning, and pilot decision-making from the same data.
             </div>
           </div>
         </div>

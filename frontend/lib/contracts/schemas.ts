@@ -81,9 +81,15 @@ export const ReplacementForecastSchema = z.object({
   confidence: z.number()
 });
 
+export const ForecastCurvePointSchema = z.object({
+  date: z.string(),
+  soh: z.number()
+});
+
 export const SohPredictionSchema = z.object({
   planeId: z.string(),
   forecast: ReplacementForecastSchema,
+  forecastCurve: z.array(ForecastCurvePointSchema),
   sohTargetBlend: z.number(),
   sohProxyPoh: z.number(),
   sohObservedNorm: z.number()
@@ -184,6 +190,23 @@ export const LearnOutputsSchema = z.object({
   healthLabel: HealthLabelSchema,
   rulDaysShift: z.number(),
   recommendationSummary: z.string()
+});
+
+export const LearnTrajectoryPointSchema = z.object({
+  label: z.string(),
+  baseline: z.number(),
+  simulated: z.number()
+});
+
+export const LearnEvaluationSchema = z.object({
+  planeId: z.string(),
+  outputs: LearnOutputsSchema.extend({
+    healthExplanation: z.string(),
+    expectedRangeKm: z.number(),
+    confidence: z.number(),
+    topDrivers: z.array(z.string())
+  }),
+  trajectory: z.array(LearnTrajectoryPointSchema)
 });
 
 export const LearnBaselineSchema = z.object({
@@ -300,7 +323,17 @@ export const RecommendationsResponseSchema = z.object({
 });
 
 export const LearnBaselineResponseSchema = z.object({
-  baseline: LearnBaselineSchema
+  baseline: LearnBaselineSchema,
+  evaluation: LearnEvaluationSchema.optional()
+});
+
+export const LearnEvaluateRequestSchema = z.object({
+  planeId: z.string(),
+  inputs: LearnInputsSchema
+});
+
+export const LearnEvaluateResponseSchema = z.object({
+  evaluation: LearnEvaluationSchema
 });
 
 export const ChargingCostResponseSchema = z.object({
@@ -320,6 +353,7 @@ export type PlaneLiveHealth = z.infer<typeof PlaneLiveHealthSchema>;
 export type SohTrendPoint = z.infer<typeof SohTrendPointSchema>;
 export type FlightEventSummary = z.infer<typeof FlightEventSummarySchema>;
 export type ReplacementForecast = z.infer<typeof ReplacementForecastSchema>;
+export type ForecastCurvePoint = z.infer<typeof ForecastCurvePointSchema>;
 export type SohPrediction = z.infer<typeof SohPredictionSchema>;
 export type RecommendationCard = z.infer<typeof RecommendationCardSchema>;
 export type FlightDayScore = z.infer<typeof FlightDayScoreSchema>;
@@ -330,6 +364,8 @@ export type WeatherDay = z.infer<typeof WeatherDaySchema>;
 export type GlossaryItem = z.infer<typeof GlossaryItemSchema>;
 export type LearnInputs = z.infer<typeof LearnInputsSchema>;
 export type LearnOutputs = z.infer<typeof LearnOutputsSchema>;
+export type LearnTrajectoryPoint = z.infer<typeof LearnTrajectoryPointSchema>;
+export type LearnEvaluation = z.infer<typeof LearnEvaluationSchema>;
 export type LearnBaseline = z.infer<typeof LearnBaselineSchema>;
 export type ChargingCostEstimate = z.infer<typeof ChargingCostEstimateSchema>;
 export type MissionGameInput = z.infer<typeof MissionGameInputSchema>;

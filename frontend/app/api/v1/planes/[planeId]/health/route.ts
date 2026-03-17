@@ -8,6 +8,10 @@ import {
 } from "@/lib/soh-health-bands";
 import { getLivePlanePayload } from "@/lib/live-plane-service";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ planeId: string }> }

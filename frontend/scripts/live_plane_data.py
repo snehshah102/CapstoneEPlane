@@ -90,6 +90,24 @@ def _load_latent(repo_root: Path, plane_id: str) -> pd.DataFrame:
     return latent.loc[latent["plane_id"].eq(str(plane_id))].copy().sort_values("event_datetime")
 
 
+def _load_manifest_all(repo_root: Path) -> pd.DataFrame:
+    manifest_path = repo_root / "data" / "event_manifest.parquet"
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"Missing manifest parquet: {manifest_path}")
+    manifest = pd.read_parquet(manifest_path)
+    manifest["plane_id"] = manifest["plane_id"].astype(str)
+    manifest["event_datetime"] = pd.to_datetime(manifest["event_datetime"], errors="coerce", utc=True)
+    manifest["event_date"] = pd.to_datetime(manifest["event_date"], errors="coerce", utc=True)
+    return manifest.sort_values("event_datetime")
+
+
+def _try_load_latent(repo_root: Path, plane_id: str) -> pd.DataFrame:
+    try:
+        return _load_latent(repo_root, plane_id)
+    except FileNotFoundError:
+        return pd.DataFrame()
+
+
 def _window_delta(df: pd.DataFrame, days: int) -> float:
     if df.empty:
         return 0.0
@@ -303,6 +321,78 @@ def _build_flights(manifest_df: pd.DataFrame) -> list[dict[str, Any]]:
     return flights
 
 
+def _plane_summary(repo_root: Path, manifest_df: pd.DataFrame, plane_id: str) -> dict[str, Any]:
+    plane_manifest = manifest_df.loc[manifest_df["plane_id"].eq(str(plane_id))].copy()
+    latent_df = _try_load_latent(repo_root, plane_id)
+
+    flights_count = (
+        int(pd.to_numeric(plane_manifest["is_flight_event"], errors="coerce").fillna(0).sum())
+        if not plane_manifest.empty and "is_flight_event" in plane_manifest.columns
+        else 0
+    )
+    charging_events_count = (
+        int(pd.to_numeric(plane_manifest["is_charging_event"], errors="coerce").fillna(0).sum())
+        if not plane_manifest.empty and "is_charging_event" in plane_manifest.columns
+        else 0
+    )
+
+    registration = (
+        str(plane_manifest["registration"].dropna().iloc[0])
+        if not plane_manifest.empty and "registration" in plane_manifest.columns and plane_manifest["registration"].notna().any()
+        else f"Plane {plane_id}"
+    )
+    aircraft_type = (
+        str(plane_manifest["aircraft_type"].dropna().iloc[0])
+        if not plane_manifest.empty and "aircraft_type" in plane_manifest.columns and plane_manifest["aircraft_type"].notna().any()
+        else "Unknown aircraft"
+    )
+
+    if not latent_df.empty:
+        latest = latent_df.sort_values("event_datetime").iloc[-1]
+        soh_current = _safe_float(latest.get("latent_soh_filter_pct", np.nan), 0.0)
+        soh_trend_30 = _window_delta(latent_df, 30)
+        updated_at = latest["event_datetime"].to_pydatetime().astimezone(timezone.utc).replace(microsecond=0).isoformat()
+    else:
+        soh_current = 0.0
+        soh_trend_30 = 0.0
+        if not plane_manifest.empty and plane_manifest["event_datetime"].notna().any():
+            updated_at = (
+                plane_manifest["event_datetime"]
+                .dropna()
+                .iloc[-1]
+                .to_pydatetime()
+                .astimezone(timezone.utc)
+                .replace(microsecond=0)
+                .isoformat()
+            )
+        else:
+            updated_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
+    return {
+        "planeId": str(plane_id),
+        "registration": registration,
+        "aircraftType": aircraft_type,
+        "flightsCount": flights_count,
+        "chargingEventsCount": charging_events_count,
+        "sohCurrent": float(soh_current),
+        "sohTrend30": float(soh_trend_30),
+        "riskBand": _risk_band(float(soh_current)),
+        "updatedAt": updated_at,
+    }
+
+
+def _build_plane_summaries() -> dict[str, Any]:
+    repo_root = _repo_root()
+    manifest_df = _load_manifest_all(repo_root)
+    plane_ids = sorted(
+        {str(plane_id) for plane_id in manifest_df["plane_id"].dropna().astype(str).tolist()},
+        key=lambda value: (not value.isdigit(), int(value) if value.isdigit() else value),
+    )
+    return {
+        "planes": [_plane_summary(repo_root, manifest_df, plane_id) for plane_id in plane_ids]
+    }
+
+
 def _build_payload(plane_id: str) -> dict[str, Any]:
     repo_root = _repo_root()
     manifest_df = _load_manifest(repo_root, plane_id)
@@ -417,10 +507,20 @@ def _build_payload(plane_id: str) -> dict[str, Any]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Emit live plane payloads for frontend routes.")
-    parser.add_argument("--plane-id", required=True, help="Plane id to load")
+    parser.add_argument("--plane-id", help="Plane id to load")
+    parser.add_argument(
+        "--list-planes",
+        action="store_true",
+        help="Emit the fleet summary payload from live manifest/model data",
+    )
     args = parser.parse_args()
 
-    payload = _build_payload(str(args.plane_id))
+    if args.list_planes:
+        payload = _build_plane_summaries()
+    elif args.plane_id:
+        payload = _build_payload(str(args.plane_id))
+    else:
+        raise SystemExit("Provide --plane-id or --list-planes")
     print(json.dumps(payload))
 
 

@@ -1,6 +1,8 @@
 import {
   ChargingCostResponseSchema,
   FlightsResponseSchema,
+  LearnEvaluateRequestSchema,
+  LearnEvaluateResponseSchema,
   GlossaryResponseSchema,
   LearnBaselineResponseSchema,
   MissionGameBaselineResponseSchema,
@@ -100,6 +102,18 @@ export function getLearnBaseline(planeId: string) {
   return fetchAndParse(
     `/api/v1/learn/baseline?planeId=${planeId}`,
     LearnBaselineResponseSchema
+  );
+}
+
+export function evaluateLearnScenario(
+  planeId: string,
+  inputs: unknown
+) {
+  const body = LearnEvaluateRequestSchema.parse({ planeId, inputs });
+  return postAndParse(
+    "/api/v1/learn/evaluate",
+    body,
+    LearnEvaluateResponseSchema
   );
 }
 

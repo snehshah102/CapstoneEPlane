@@ -90,6 +90,62 @@ async function fetchOpenMeteo(lat: number, lon: number, start: string, end: stri
   }
 }
 
+async function fetchOpenMeteoArchive(lat: number, lon: number, start: string, end: string) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 3_000);
+  const url =
+    `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}` +
+    `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max` +
+    `&timezone=UTC&start_date=${start}&end_date=${end}`;
+
+  try {
+    const response = await fetch(url, {
+      cache: "no-store",
+      signal: controller.signal
+    });
+    if (!response.ok) {
+      throw new Error("Weather archive unavailable");
+    }
+    return response.json();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function parseDailyPayload(
+  daily:
+    | {
+        time?: string[];
+        temperature_2m_max?: Array<number | null>;
+        temperature_2m_min?: Array<number | null>;
+        precipitation_sum?: Array<number | null>;
+        wind_speed_10m_max?: Array<number | null>;
+      }
+    | undefined,
+  todayIso: string
+) {
+  if (!daily?.time?.length) {
+    return [] as WeatherDay[];
+  }
+
+  return daily.time.map((date: string, index: number) => {
+    const offset = daysBetweenUtc(date, todayIso);
+    const tempMax = Number(daily.temperature_2m_max?.[index] ?? 0);
+    const tempMin = Number(daily.temperature_2m_min?.[index] ?? 0);
+    const precip = Number(daily.precipitation_sum?.[index] ?? 0);
+    const wind = Number(daily.wind_speed_10m_max?.[index] ?? 0);
+    return {
+      date,
+      tempMinC: tempMin,
+      tempMaxC: tempMax,
+      precipMm: precip,
+      windKph: wind,
+      summary: summarizeWeatherDay(tempMax, precip, wind),
+      confidenceTier: confidenceByOffset(offset)
+    } satisfies WeatherDay;
+  });
+}
+
 export async function getWeatherPayload(airport: string, start: string, end: string) {
   const normalizedAirport = airport.toUpperCase();
   const airportMeta = AIRPORTS[normalizedAirport];
@@ -98,35 +154,37 @@ export async function getWeatherPayload(airport: string, start: string, end: str
   }
 
   const days = enumerateUtcDates(start, end);
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const yesterdayIso = formatUtcDate(new Date(Date.parse(`${todayIso}T00:00:00Z`) - 86_400_000));
   const forecastEnd = addDays(new Date(), 16);
   const endDate = parseUtcDate(end);
   const requestForecastEnd = endDate < forecastEnd ? endDate : forecastEnd;
   const forecastEndIso = formatUtcDate(requestForecastEnd);
 
   let observedDays: WeatherDay[] = [];
+  const pastEndIso = end < yesterdayIso ? end : yesterdayIso;
+  if (start <= pastEndIso) {
+    try {
+      const archive = await fetchOpenMeteoArchive(airportMeta.lat, airportMeta.lon, start, pastEndIso);
+      observedDays = observedDays.concat(parseDailyPayload(archive?.daily, todayIso));
+    } catch {
+      observedDays = observedDays.concat([]);
+    }
+  }
+
   try {
-    const weather = await fetchOpenMeteo(airportMeta.lat, airportMeta.lon, start, forecastEndIso);
-    const daily = weather?.daily;
-    if (daily?.time?.length) {
-      observedDays = daily.time.map((date: string, index: number) => {
-        const offset = daysBetweenUtc(date, new Date().toISOString().slice(0, 10));
-        const tempMax = Number(daily.temperature_2m_max[index] ?? 0);
-        const tempMin = Number(daily.temperature_2m_min[index] ?? 0);
-        const precip = Number(daily.precipitation_sum[index] ?? 0);
-        const wind = Number(daily.wind_speed_10m_max[index] ?? 0);
-        return {
-          date,
-          tempMinC: tempMin,
-          tempMaxC: tempMax,
-          precipMm: precip,
-          windKph: wind,
-          summary: summarizeWeatherDay(tempMax, precip, wind),
-          confidenceTier: confidenceByOffset(offset)
-        };
-      });
+    const forecastStartIso = start > todayIso ? start : todayIso;
+    if (forecastStartIso <= forecastEndIso) {
+      const weather = await fetchOpenMeteo(
+        airportMeta.lat,
+        airportMeta.lon,
+        forecastStartIso,
+        forecastEndIso
+      );
+      observedDays = observedDays.concat(parseDailyPayload(weather?.daily, todayIso));
     }
   } catch {
-    observedDays = [];
+    observedDays = observedDays.concat([]);
   }
 
   const observedMap = new Map(observedDays.map((item) => [item.date, item]));

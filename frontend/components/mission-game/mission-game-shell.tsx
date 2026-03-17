@@ -1,14 +1,19 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 
 import {
   evaluateMissionGame,
   getMissionGameBaseline,
   getPlanes
 } from "@/lib/adapters/api-client";
-import { MissionGameInput, MissionGameResult } from "@/lib/contracts/schemas";
+import {
+  MissionGameBaseline,
+  MissionGameInput,
+  MissionGameResult,
+  PlaneSummary
+} from "@/lib/contracts/schemas";
 import { MissionCompareTable } from "@/components/mission-game/mission-compare-table";
 import {
   LeaderboardEntry,
@@ -22,19 +27,32 @@ function inputKey(input: MissionGameInput) {
   return JSON.stringify(input);
 }
 
-export function MissionGameShell() {
+type Props = {
+  initialPlanes?: PlaneSummary[];
+  initialBaseline?: MissionGameBaseline;
+};
+
+export function MissionGameShell({ initialPlanes, initialBaseline }: Props) {
   const [result, setResult] = useState<MissionGameResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [lastEvaluatedKey, setLastEvaluatedKey] = useState<string | null>(null);
   const cacheRef = useRef<Map<string, MissionGameResult>>(new Map());
 
   const planesQuery = useQuery({
     queryKey: ["planes"],
-    queryFn: getPlanes
+    queryFn: getPlanes,
+    initialData: initialPlanes ? { planes: initialPlanes } : undefined,
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false
   });
   const baselineQuery = useQuery({
     queryKey: ["mission-game-baseline"],
-    queryFn: getMissionGameBaseline
+    queryFn: getMissionGameBaseline,
+    initialData: initialBaseline ? { baseline: initialBaseline } : undefined,
+    placeholderData: keepPreviousData,
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false
   });
 
   const planes = useMemo(() => planesQuery.data?.planes ?? [], [planesQuery.data?.planes]);
@@ -65,7 +83,9 @@ export function MissionGameShell() {
       setResult(payload.result);
       setError(null);
       if (hydratedValues) {
-        cacheRef.current.set(inputKey(hydratedValues), payload.result);
+        const key = inputKey(hydratedValues);
+        cacheRef.current.set(key, payload.result);
+        setLastEvaluatedKey(key);
       }
     },
     onError: (err: Error) => {
@@ -73,10 +93,51 @@ export function MissionGameShell() {
     }
   });
 
-  if (planesQuery.isLoading || baselineQuery.isLoading || !hydratedValues || !baseline) {
-    return <div className="text-sm text-muted">Loading FlightLab...</div>;
+  if (!planesQuery.data || !baselineQuery.data || !hydratedValues || !baseline) {
+    return (
+      <main className="space-y-6">
+        <section className="space-y-2">
+          <div className="h-10 w-40 animate-pulse rounded-2xl bg-slate-200/80" />
+          <div className="h-5 w-[30rem] max-w-full animate-pulse rounded-xl bg-slate-100" />
+        </section>
+
+        <section className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+          <Card className="space-y-4">
+            <div className="h-7 w-52 animate-pulse rounded-xl bg-slate-200/80" />
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-12 animate-pulse rounded-xl border border-stone-200 bg-white/75"
+              />
+            ))}
+            <div className="h-11 w-36 animate-pulse rounded-full bg-blue-100" />
+          </Card>
+
+          <div className="space-y-4">
+            <Card className="space-y-4">
+              <div className="h-6 w-44 animate-pulse rounded-xl bg-slate-200/80" />
+              <div className="h-24 animate-pulse rounded-2xl bg-slate-100" />
+              <div className="grid gap-2">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="h-12 animate-pulse rounded-xl bg-slate-50" />
+                ))}
+              </div>
+            </Card>
+            <Card className="space-y-3">
+              <div className="h-6 w-36 animate-pulse rounded-xl bg-slate-200/80" />
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="h-11 animate-pulse rounded-xl bg-slate-100" />
+              ))}
+            </Card>
+          </div>
+        </section>
+      </main>
+    );
   }
-  if (planesQuery.isError || baselineQuery.isError || !planesQuery.data) {
+  if (
+    (planesQuery.isError && !planesQuery.data) ||
+    (baselineQuery.isError && !baselineQuery.data)
+  ) {
     return <div className="text-sm text-rose-600">FlightLab data unavailable.</div>;
   }
 
@@ -90,6 +151,7 @@ export function MissionGameShell() {
     if (cached) {
       setResult(cached);
       setError(null);
+      setLastEvaluatedKey(key);
       return;
     }
     await evaluateMutation.mutateAsync(hydratedValues);
@@ -122,7 +184,10 @@ export function MissionGameShell() {
     setValues(defaultValues);
     setResult(null);
     setError(null);
+    setLastEvaluatedKey(null);
   };
+  const currentInputKey = hydratedValues ? inputKey(hydratedValues) : null;
+  const resultStale = Boolean(result && currentInputKey && lastEvaluatedKey && currentInputKey !== lastEvaluatedKey);
 
   return (
     <main className="space-y-6">
@@ -151,12 +216,18 @@ export function MissionGameShell() {
         <div className="space-y-4">
           {result ? (
             <Card>
+              {resultStale ? (
+                <p className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  Mission inputs changed. Run FlightLab again to refresh the live score.
+                </p>
+              ) : null}
               <MissionScorePanel result={result} />
               <div className="mt-4 flex items-center gap-2">
                 <button
                   type="button"
                   onClick={saveRun}
-                  className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                  disabled={resultStale}
+                  className="rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
                 >
                   Save Run
                 </button>

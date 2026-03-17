@@ -1,12 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
-  addDays,
   addMonths,
-  differenceInCalendarDays,
-  parseISO,
 } from "date-fns";
 import {
   BatteryMedium,
@@ -37,11 +34,15 @@ import { GlossarySection } from "@/components/ui/glossary-section";
 import { HealthMeter } from "@/components/ui/health-meter";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { GLOSSARY_FALLBACK } from "@/lib/glossary";
-import { SohTrendPoint } from "@/lib/contracts/schemas";
+import { ForecastCurvePoint } from "@/lib/contracts/schemas";
 import { formatPct } from "@/lib/utils";
 
 function monthString(date: Date) {
   return date.toISOString().slice(0, 7);
+}
+
+function formatFixedValue(value: number | null | undefined, digits: number) {
+  return typeof value === "number" && Number.isFinite(value) ? value.toFixed(digits) : "--";
 }
 
 function monthRange(month: string) {
@@ -74,85 +75,71 @@ type ForecastPoint = {
   soh: number;
 };
 
-function buildForecastPoints(
-  trendPoints: SohTrendPoint[],
-  replacementDatePred: string,
+function filterForecastPoints(
+  forecastPoints: ForecastCurvePoint[],
   window: "30d" | "90d" | "1y" | "full"
 ): ForecastPoint[] {
-  if (!trendPoints.length) {
+  if (!forecastPoints.length) {
     return [];
   }
+  if (window === "full") return forecastPoints;
+  const forecastWindowDays = window === "30d" ? 30 : window === "90d" ? 90 : 365;
+  const startDate = Date.parse(`${forecastPoints[0].date}T00:00:00Z`);
+  return forecastPoints.filter((point) => {
+    const pointDate = Date.parse(`${point.date}T00:00:00Z`);
+    return Number.isFinite(pointDate) && pointDate - startDate <= forecastWindowDays * 86_400_000;
+  });
+}
 
-  const lastPoint = trendPoints[trendPoints.length - 1];
-  const lastDate = parseISO(lastPoint.date);
-  const replacementDate = parseISO(replacementDatePred);
-  if (Number.isNaN(lastDate.getTime()) || Number.isNaN(replacementDate.getTime())) {
-    return [];
+function defaultRecommendationDate(month: string, availableDates: string[]) {
+  if (!availableDates.length) {
+    return null;
   }
-
-  const totalDaysToReplacement = differenceInCalendarDays(replacementDate, lastDate);
-  if (totalDaysToReplacement <= 0) {
-    return [];
+  const today = new Date().toISOString().slice(0, 10);
+  if (today.startsWith(month) && availableDates.includes(today)) {
+    return today;
   }
-
-  const forecastWindowDays =
-    window === "30d" ? 30 : window === "90d" ? 90 : window === "1y" ? 365 : totalDaysToReplacement;
-  const projectionDays = Math.max(
-    1,
-    Math.min(totalDaysToReplacement, forecastWindowDays)
-  );
-
-  const points: ForecastPoint[] = [{ date: lastPoint.date, soh: lastPoint.soh }];
-  for (let day = 1; day <= projectionDays; day += 1) {
-    const date = addDays(lastDate, day);
-    const fraction = day / totalDaysToReplacement;
-    const projectedSoh = Math.max(0, Math.min(100, lastPoint.soh * (1 - fraction)));
-    points.push({
-      date: date.toISOString().slice(0, 10),
-      soh: projectedSoh
-    });
-  }
-
-  return points;
+  return availableDates[0];
 }
 
 export function PlaneDashboard({ planeId }: Props) {
   const [month, setMonth] = useState(monthString(new Date()));
   const [trendWindow, setTrendWindow] = useState<"30d" | "90d" | "1y" | "full">("90d");
+  const [selectedRecommendationDate, setSelectedRecommendationDate] = useState<string | null>(null);
   const options = useMemo(() => monthOptions(), []);
 
   const healthQuery = useQuery({
     queryKey: ["plane-health", planeId],
     queryFn: () => getPlaneHealth(planeId),
+    placeholderData: keepPreviousData,
     refetchInterval: 45_000
   });
   const trendQuery = useQuery({
     queryKey: ["plane-trend", planeId, trendWindow],
-    queryFn: () => getPlaneTrend(planeId, trendWindow)
+    queryFn: () => getPlaneTrend(planeId, trendWindow),
+    placeholderData: keepPreviousData
   });
   const predictionQuery = useQuery({
     queryKey: ["plane-prediction", planeId],
-    queryFn: () => getPlanePrediction(planeId)
+    queryFn: () => getPlanePrediction(planeId),
+    placeholderData: keepPreviousData
   });
   const recsQuery = useQuery({
     queryKey: ["plane-recs", planeId, month],
-    queryFn: () => getPlaneRecommendations(planeId, month)
+    queryFn: () => getPlaneRecommendations(planeId, month),
+    placeholderData: keepPreviousData
   });
   const glossaryQuery = useQuery({
     queryKey: ["glossary"],
     queryFn: getGlossary
   });
   const forecastPoints = useMemo(() => {
-    const trendPoints = trendQuery.data?.points ?? [];
-    const replacementDatePred =
-      predictionQuery.data?.prediction.forecast.replacementDatePred;
-    if (!replacementDatePred) {
-      return [] as ForecastPoint[];
-    }
-    return buildForecastPoints(trendPoints, replacementDatePred, trendWindow);
+    return filterForecastPoints(
+      predictionQuery.data?.prediction.forecastCurve ?? [],
+      trendWindow
+    );
   }, [
-    trendQuery.data?.points,
-    predictionQuery.data?.prediction.forecast.replacementDatePred,
+    predictionQuery.data?.prediction.forecastCurve,
     trendWindow
   ]);
 
@@ -161,36 +148,53 @@ export function PlaneDashboard({ planeId }: Props) {
   const { start, end } = monthRange(month);
   const weatherQuery = useQuery({
     queryKey: ["weather", airportCode, start, end],
-    queryFn: () => getWeather(airportCode, start, end)
+    queryFn: () => getWeather(airportCode, start, end),
+    placeholderData: keepPreviousData
   });
 
   const chargingQuery = useQuery({
     queryKey: ["plane-charging", planeId, airportCode],
     queryFn: () =>
       getChargingCost(airportCode, new Date().toISOString().slice(0, 10), 52),
-    enabled: Boolean(airportCode)
+    enabled: Boolean(airportCode),
+    placeholderData: keepPreviousData
   });
+  const recommendationDays = useMemo(
+    () => recsQuery.data?.recommendations.calendarDays ?? [],
+    [recsQuery.data?.recommendations.calendarDays]
+  );
+  const nextBestDay = useMemo(() => {
+    if (!selectedRecommendationDate) {
+      return null;
+    }
+    const remainingDays = recommendationDays.filter((day) => day.date > selectedRecommendationDate);
+    if (!remainingDays.length) {
+      return null;
+    }
+    return [...remainingDays].sort((a, b) => b.score - a.score)[0] ?? null;
+  }, [recommendationDays, selectedRecommendationDate]);
 
-  if (
-    healthQuery.isLoading ||
-    trendQuery.isLoading ||
-    predictionQuery.isLoading ||
-    recsQuery.isLoading
-  ) {
+  useEffect(() => {
+    const availableDates = recommendationDays.map((day) => day.date);
+    setSelectedRecommendationDate((current) => {
+      if (current && availableDates.includes(current)) {
+        return current;
+      }
+      return defaultRecommendationDate(month, availableDates);
+    });
+  }, [month, recommendationDays]);
+
+  if (!healthQuery.data || !trendQuery.data || !predictionQuery.data || !recsQuery.data) {
     return <div className="text-sm text-muted">Loading plane dashboard...</div>;
   }
 
   if (
-    healthQuery.isError ||
-    trendQuery.isError ||
-    predictionQuery.isError ||
-    recsQuery.isError ||
-    !healthQuery.data ||
-    !trendQuery.data ||
-    !predictionQuery.data ||
-    !recsQuery.data
+    (healthQuery.isError && !healthQuery.data) ||
+    (trendQuery.isError && !trendQuery.data) ||
+    (predictionQuery.isError && !predictionQuery.data) ||
+    (recsQuery.isError && !recsQuery.data)
   ) {
-    return <div className="text-sm text-rose-600">Unable to load plane snapshot data.</div>;
+    return <div className="text-sm text-rose-600">Unable to load plane data.</div>;
   }
 
   const glossaryItems = (glossaryQuery.data?.items ?? GLOSSARY_FALLBACK).filter(
@@ -204,8 +208,12 @@ export function PlaneDashboard({ planeId }: Props) {
   const recommendations = recsQuery.data.recommendations;
   const departure = airportFromLabel(health.lastFlight.departureAirport);
   const destination = airportFromLabel(health.lastFlight.destinationAirport);
-  const topDay = recommendations.flightDayScores[0];
   const chargingEstimate = chargingQuery.data?.estimate;
+  const trendBusy = trendQuery.isFetching;
+  const recommendationBusy = recsQuery.isFetching;
+  const weatherBusy = weatherQuery.isFetching || chargingQuery.isFetching;
+  const sessionCost = formatFixedValue(chargingEstimate?.estimatedSessionCostUsd, 2);
+  const unitRate = formatFixedValue(chargingEstimate?.costPerKwhUsd, 3);
 
   return (
     <main className="space-y-6">
@@ -310,7 +318,7 @@ export function PlaneDashboard({ planeId }: Props) {
             Charging Cost
           </p>
           <p className="text-2xl font-semibold text-slate-900">
-            ${chargingEstimate?.estimatedSessionCostUsd.toFixed(2) ?? "--"}
+            ${sessionCost}
           </p>
           <p className="text-xs text-muted">
             {airportCode} {chargingEstimate ? `(${chargingEstimate.sourceMode})` : ""}
@@ -378,7 +386,7 @@ export function PlaneDashboard({ planeId }: Props) {
             <p>
               Session total:{" "}
               <span className="font-semibold">
-                ${chargingEstimate?.estimatedSessionCostUsd.toFixed(2) ?? "--"}
+                ${sessionCost}
               </span>
             </p>
             <p>
@@ -388,7 +396,7 @@ export function PlaneDashboard({ planeId }: Props) {
             <p>
               Unit electricity rate:{" "}
               <span className="font-semibold">
-                ${chargingEstimate?.costPerKwhUsd.toFixed(3) ?? "--"} per kWh
+                ${unitRate} per kWh
               </span>
             </p>
             <p className="text-xs text-muted">
@@ -398,8 +406,11 @@ export function PlaneDashboard({ planeId }: Props) {
         </Card>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-2">
-        <Card>
+      <section className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
+        <Card
+          className={`transition-opacity duration-200 ${trendBusy ? "opacity-80" : "opacity-100"}`}
+          aria-busy={trendBusy}
+        >
           <div className="mb-2 flex items-center justify-between gap-3">
             <h2 className="font-[var(--font-heading)] text-lg text-slate-900">
               SOH History ({TREND_WINDOWS.find((item) => item.value === trendWindow)?.label ?? "90d"})
@@ -410,10 +421,10 @@ export function PlaneDashboard({ planeId }: Props) {
                   key={item.value}
                   type="button"
                   onClick={() => setTrendWindow(item.value)}
-                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${
+                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition duration-200 ${
                     trendWindow === item.value
-                      ? "bg-blue-600 text-white"
-                      : "text-slate-600 hover:bg-slate-100"
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   {item.label}
@@ -421,16 +432,21 @@ export function PlaneDashboard({ planeId }: Props) {
               ))}
             </div>
           </div>
-          <p className="mb-3 text-xs text-muted">
-            Solid line = observed latent SOH history. Dashed line = projected SOH forecast.
-          </p>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-xs text-muted">
+              Solid line = observed latent SOH history. Dashed line = projected SOH forecast.
+            </p>
+            <span className="text-[11px] text-slate-500">
+              {trendBusy ? "Updating view..." : " "}
+            </span>
+          </div>
           <SohLineChart
             points={trendQuery.data.points}
             forecastPoints={forecastPoints}
             window={trendWindow}
           />
         </Card>
-        <Card>
+        <Card className="self-start">
           <h2 className="mb-1 font-[var(--font-heading)] text-lg text-slate-900">
             Range & Endurance Forecast
           </h2>
@@ -441,8 +457,11 @@ export function PlaneDashboard({ planeId }: Props) {
         </Card>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[1.35fr_0.65fr]">
-        <Card className="space-y-4">
+      <section className="grid gap-4 xl:grid-cols-[1.45fr_0.55fr]">
+        <Card
+          className={`space-y-4 transition-opacity duration-200 ${recommendationBusy ? "opacity-80" : "opacity-100"}`}
+          aria-busy={recommendationBusy}
+        >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-blue-700" />
@@ -455,7 +474,7 @@ export function PlaneDashboard({ planeId }: Props) {
               <select
                 value={month}
                 onChange={(event) => setMonth(event.target.value)}
-                className="ml-2 rounded-lg border border-stone-300 bg-white px-2 py-1 text-slate-900"
+                className="ml-2 rounded-lg border border-stone-300 bg-white px-2 py-1 text-slate-900 transition duration-200 hover:border-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               >
                 {options.map((option) => (
                   <option key={option} value={option}>
@@ -466,22 +485,35 @@ export function PlaneDashboard({ planeId }: Props) {
             </label>
           </div>
 
+          <div className="flex items-center justify-between gap-3 text-xs text-slate-500">
+            <span>Recommendations refresh in place when you change month.</span>
+            <span>{recommendationBusy ? "Updating..." : " "}</span>
+          </div>
+
           <RecommendationCalendar
-            days={recommendations.calendarDays}
+            days={recommendationDays}
             breakdownByDate={recommendations.scoreBreakdownByDate}
             chargePlan={recommendations.chargePlan}
+            selectedDate={selectedRecommendationDate}
+            onSelectedDateChange={setSelectedRecommendationDate}
           />
         </Card>
 
-        <Card className="space-y-4">
+        <Card className="self-start space-y-4">
           <h3 className="font-[var(--font-heading)] text-lg text-slate-900">
             Recommendation Highlights
           </h3>
-          {topDay ? (
+          {nextBestDay ? (
             <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-3 text-sm">
-              <p className="text-muted">Best current day</p>
-              <p className="font-semibold text-slate-900">{topDay.date}</p>
-              <p className="text-blue-700">Score {topDay.score.toFixed(1)}</p>
+              <p className="text-muted">Best next day</p>
+              <p className="font-semibold text-slate-900">{nextBestDay.date}</p>
+              <p className="text-blue-700">Score {nextBestDay.score.toFixed(1)}</p>
+            </div>
+          ) : selectedRecommendationDate ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm">
+              <p className="text-muted">Best next day</p>
+              <p className="font-semibold text-slate-900">No later dates this month</p>
+              <p className="text-slate-600">You are already viewing one of the final available days.</p>
             </div>
           ) : null}
           <div className="space-y-2">
@@ -500,7 +532,7 @@ export function PlaneDashboard({ planeId }: Props) {
         </Card>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+      <section className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
         <Card className="space-y-4">
           <h2 className="font-[var(--font-heading)] text-lg text-slate-900">Route Context</h2>
           <RouteMap
@@ -516,7 +548,10 @@ export function PlaneDashboard({ planeId }: Props) {
             }
           />
         </Card>
-        <Card className="space-y-3">
+        <Card
+          className={`self-start space-y-3 transition-opacity duration-200 ${weatherBusy ? "opacity-80" : "opacity-100"}`}
+          aria-busy={weatherBusy}
+        >
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-blue-700" />
             <h2 className="font-[var(--font-heading)] text-lg text-slate-900">Weather + Cost Signal</h2>
@@ -527,7 +562,14 @@ export function PlaneDashboard({ planeId }: Props) {
             </div>
           ) : null}
           <p className="text-sm text-muted">
-            Source mode: <span className="font-semibold capitalize">{weatherQuery.data?.mode}</span>
+            Source mode:{" "}
+            <span className="font-semibold capitalize">
+              Weather {weatherQuery.data?.mode}
+              {chargingEstimate ? ` | Cost ${chargingEstimate.sourceMode}` : ""}
+            </span>
+          </p>
+          <p className="text-[11px] text-slate-500">
+            {weatherBusy ? "Refreshing forecast and charging estimate..." : " "}
           </p>
           <div className="space-y-2">
             {weatherQuery.data?.days.slice(0, 5).map((day) => (
@@ -556,7 +598,7 @@ export function PlaneDashboard({ planeId }: Props) {
           </div>
           <p className="text-xs text-muted">
             Estimated charging session: $
-            {chargingEstimate?.estimatedSessionCostUsd.toFixed(2) ?? "--"} for{" "}
+            {sessionCost} for{" "}
             {chargingEstimate?.energyKwh ?? 52} kWh.
           </p>
         </Card>

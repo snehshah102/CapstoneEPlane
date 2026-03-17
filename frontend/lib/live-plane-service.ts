@@ -1,9 +1,4 @@
-import { execFile } from "child_process";
-import { existsSync } from "fs";
-import path from "path";
-import { promisify } from "util";
-
-const execFileAsync = promisify(execFile);
+import { runPythonJson } from "@/lib/live-python";
 const LIVE_TTL_MS = 60_000;
 
 type LivePlanePayload = {
@@ -39,32 +34,11 @@ type CacheEntry = {
 
 const planeCache = new Map<string, CacheEntry>();
 
-function resolveFrontendRoot() {
-  const cwd = process.cwd();
-  const frontendCwd = path.join(cwd, "frontend");
-  if (existsSync(path.join(cwd, "scripts", "live_plane_data.py"))) {
-    return cwd;
-  }
-  if (existsSync(path.join(frontendCwd, "scripts", "live_plane_data.py"))) {
-    return frontendCwd;
-  }
-  throw new Error(`Unable to locate frontend scripts directory from cwd: ${cwd}`);
-}
-
 async function runLivePlaneScript(planeId: string): Promise<LivePlanePayload> {
-  const frontendRoot = resolveFrontendRoot();
-  const scriptPath = path.join(frontendRoot, "scripts", "live_plane_data.py");
-  const pythonCommand = process.platform === "win32" ? "python" : "python3";
-  const { stdout } = await execFileAsync(
-    pythonCommand,
-    [scriptPath, "--plane-id", planeId],
-    {
-      cwd: frontendRoot,
-      maxBuffer: 8 * 1024 * 1024
-    }
-  );
-
-  const parsed = JSON.parse(stdout) as LivePlanePayload;
+  const parsed = await runPythonJson<LivePlanePayload>("live_plane_data.py", [
+    "--plane-id",
+    planeId
+  ]);
   if (!parsed || parsed.planeId !== planeId) {
     throw new Error(`Unexpected live payload for plane ${planeId}`);
   }

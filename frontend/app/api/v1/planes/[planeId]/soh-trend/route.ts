@@ -5,6 +5,7 @@ import { SohTrendResponseSchema } from "@/lib/contracts/schemas";
 import { getLivePlanePayload } from "@/lib/live-plane-service";
 
 type TrendWindow = "30d" | "90d" | "1y" | "full";
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 

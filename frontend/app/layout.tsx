@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
-import Link from "next/link";
 
+import { SiteHeader } from "@/components/layout/site-header";
 import { ChunkReloadGuard } from "@/components/providers/chunk-reload-guard";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { RouteTransition } from "@/components/providers/route-transition";
 import "./globals.css";
 
 const headingFont = Space_Grotesk({
@@ -45,40 +46,8 @@ export default function RootLayout({
         <QueryProvider>
           <ChunkReloadGuard />
           <div className="mx-auto max-w-[1240px] px-5 pb-16 pt-5 md:px-8">
-            <header className="mb-12 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
-              <div className="space-y-0.5">
-                <Link
-                  href="/"
-                  prefetch={false}
-                  className="font-[var(--font-heading)] text-xl tracking-tight text-slate-900"
-                >
-                  AeroCell
-                </Link>
-                <p className="text-xs text-muted">
-                  Unlocking Battery Intelligence for Next-Generation Electric
-                  Aviation
-                </p>
-              </div>
-              <nav className="flex items-center gap-6 text-sm text-slate-600">
-                <Link href="/" prefetch={false} className="transition hover:text-slate-900">
-                  Home
-                </Link>
-                <Link href="/planes" prefetch={false} className="transition hover:text-slate-900">
-                  Planes
-                </Link>
-                <Link
-                  href="/mission-game"
-                  prefetch={false}
-                  className="transition hover:text-slate-900"
-                >
-                  FlightLab
-                </Link>
-                <Link href="/learn" prefetch={false} className="transition hover:text-slate-900">
-                  Learn
-                </Link>
-              </nav>
-            </header>
-            {children}
+            <SiteHeader />
+            <RouteTransition>{children}</RouteTransition>
           </div>
         </QueryProvider>
       </body>
