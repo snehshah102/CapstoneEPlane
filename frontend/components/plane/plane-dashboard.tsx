@@ -6,10 +6,7 @@ import {
   addDays,
   addMonths,
   differenceInCalendarDays,
-  endOfMonth,
-  formatISO,
   parseISO,
-  startOfMonth
 } from "date-fns";
 import {
   BatteryMedium,
@@ -49,11 +46,9 @@ function monthString(date: Date) {
 
 function monthRange(month: string) {
   const [y, m] = month.split("-").map(Number);
-  const start = new Date(Date.UTC(y, m - 1, 1));
-  const end = endOfMonth(start);
   return {
-    start: formatISO(startOfMonth(start), { representation: "date" }),
-    end: formatISO(end, { representation: "date" })
+    start: `${y}-${String(m).padStart(2, "0")}-01`,
+    end: new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10)
   };
 }
 
@@ -113,7 +108,7 @@ function buildForecastPoints(
     const fraction = day / totalDaysToReplacement;
     const projectedSoh = Math.max(0, Math.min(100, lastPoint.soh * (1 - fraction)));
     points.push({
-      date: formatISO(date, { representation: "date" }),
+      date: date.toISOString().slice(0, 10),
       soh: projectedSoh
     });
   }

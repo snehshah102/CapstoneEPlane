@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { subDays } from "date-fns";
 
 import { SohTrendResponseSchema } from "@/lib/contracts/schemas";
-import { readPlaneHistorySnapshot, readPlaneTrendSnapshot } from "@/lib/snapshot-store";
+import { getLivePlanePayload } from "@/lib/live-plane-service";
 
 type TrendWindow = "30d" | "90d" | "1y" | "full";
 export const dynamic = "force-dynamic";
@@ -26,12 +26,11 @@ export async function GET(
       ? window
       : "90d";
 
-  let data;
-  try {
-    data = await readPlaneHistorySnapshot(planeId);
-  } catch {
-    data = await readPlaneTrendSnapshot(planeId);
-  }
+  const live = await getLivePlanePayload(planeId);
+  const data =
+    Array.isArray(live.history?.points) && live.history.points.length > 0
+      ? live.history
+      : live.trend;
 
   const allPoints = (data.points as Array<{ date: string; soh: number; source: string }>)
     .filter((point) => Number.isFinite(Date.parse(point.date)))

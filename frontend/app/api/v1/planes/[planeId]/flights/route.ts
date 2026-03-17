@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { FlightsResponseSchema } from "@/lib/contracts/schemas";
-import { readPlaneFlightsSnapshot } from "@/lib/snapshot-store";
+import { getLivePlanePayload } from "@/lib/live-plane-service";
 
 export async function GET(
   request: Request,
@@ -11,7 +11,8 @@ export async function GET(
   const { searchParams } = new URL(request.url);
   const limit = Number(searchParams.get("limit") ?? 25);
 
-  const data = await readPlaneFlightsSnapshot(planeId);
+  const live = await getLivePlanePayload(planeId);
+  const data = live.flights;
   const payload = FlightsResponseSchema.parse({
     planeId,
     flights: data.flights.slice(0, Math.max(1, limit))

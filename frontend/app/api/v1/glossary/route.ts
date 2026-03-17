@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 
 import { GlossaryResponseSchema } from "@/lib/contracts/schemas";
-import { readGlossarySnapshot } from "@/lib/snapshot-store";
+import { GLOSSARY_FALLBACK } from "@/lib/glossary";
 
 export async function GET() {
-  const data = await readGlossarySnapshot();
-  const payload = GlossaryResponseSchema.parse(data);
+  const payload = GlossaryResponseSchema.parse({
+    version: "codebase_fallback_v1",
+    items: GLOSSARY_FALLBACK
+  });
   return NextResponse.json(payload);
 }
 

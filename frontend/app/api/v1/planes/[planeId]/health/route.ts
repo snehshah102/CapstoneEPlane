@@ -6,15 +6,15 @@ import {
   healthLabelFromRiskBand,
   riskBandFromSoh
 } from "@/lib/soh-health-bands";
-import { readPlaneKpisSnapshot } from "@/lib/snapshot-store";
+import { getLivePlanePayload } from "@/lib/live-plane-service";
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ planeId: string }> }
 ) {
   const { planeId } = await params;
-  const data = await readPlaneKpisSnapshot(planeId);
-  const rawHealth = data.health as {
+  const live = await getLivePlanePayload(planeId);
+  const rawHealth = live.health as {
     updatedAt?: string;
     pack?: { soc?: number };
     currentChargeSoc?: number;
