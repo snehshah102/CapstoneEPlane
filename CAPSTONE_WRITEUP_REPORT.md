@@ -443,7 +443,81 @@ From `best_models_by_horizon.csv` for plane 166 validation:
 
 These results suggest that the project becomes more useful when predicting over meaningful operating horizons instead of only immediate next-event changes.
 
-### 7.7 Transfer-learning experiments
+### 7.7 Long-horizon backbone trend model
+
+One additional forecasting need emerged during the project: the system should ideally provide not just a short-horizon degradation estimate, but also a plausible long-run life trajectory toward end of life. That is difficult to learn from the Velis aircraft data alone because the in-domain batteries do not span the full degradation range down to the project’s practical end-of-life threshold.
+
+To address that limitation, the repository now separates forecasting into two layers:
+
+- a short-horizon predictive layer trained directly on aircraft data,
+- and a long-horizon backbone layer used to provide the general SOH life-curve shape.
+
+The backbone is not intended to replace the short-horizon forecast models. Its role is different. It provides a physically reasonable long-run trend that can be calibrated to each aircraft battery and used for remaining-useful-life style projections.
+
+### 7.8 Backbone data source and construction
+
+The backbone is built from the external eVTOL battery dataset rather than from direct transfer-learning of a neural model.
+
+This was an important design change. Earlier experiments attempted to pretrain and fine-tune ML models directly on the external data, but those models did not produce a sufficiently convincing improvement in the long-run trajectory shape. The more defensible use of the external dataset was therefore to extract a normalized degradation backbone rather than to force a direct cross-domain predictor.
+
+The backbone workflow is:
+
+1. Identify capacity-test anchor points in the external eVTOL cycling dataset.
+2. Compute cell capacity retention from those anchor tests.
+3. Convert retention onto the project’s adjusted SOH scale, where 80% retained capacity corresponds to 0% adjusted SOH.
+4. Fit a monotone normalized life curve over progress-to-end-of-life.
+5. Calibrate each plane battery onto that backbone in flight-count space.
+
+This gives the project a long-run degradation shape that is informed by batteries that actually degrade much farther than the Velis dataset alone.
+
+Within this workflow, the report uses two related backbone curves:
+
+- `external backbone`: the normalized long-run SOH curve fit using only the external eVTOL dataset,
+- `combined backbone`: the refit backbone obtained after adding plane-calibrated points from the Velis batteries to the external backbone points.
+
+The distinction matters. The external backbone is the generic prior: it captures the broad end-of-life shape learned from batteries that span a longer degradation range than the in-domain aircraft data. The combined backbone is the adapted version used for interpretation and long-run trend projection, because it keeps that generic shape while shifting it toward the degradation pace actually observed on the aircraft.
+
+### 7.9 Purpose of the backbone versus short-horizon forecasts
+
+The backbone and the short-horizon forecasts serve separate purposes:
+
+- Short-horizon forecasts answer: what is likely to happen over the next few flights or operating windows?
+- The backbone answers: given the current battery state, what is the general expected life-shape from here toward end of life?
+
+More concretely:
+
+- the 1, 5, 10, 15, and 20 flight models are operational models,
+- the backbone is a strategic life-trajectory model.
+
+This separation is important because the information requirements are different.
+
+Short-horizon forecasting is where the aircraft telemetry is most informative. Recent flights, charge events, temperature exposure, throughput, and latent SOH history can all help explain near-term change.
+
+Long-horizon extrapolation is where the aircraft dataset is weakest. The planes do not yet provide enough direct evidence about late-life curvature. If a model is asked to infer the entire path to 0% SOH from plane data alone, it is mostly extrapolating beyond the observed domain. The backbone reduces that problem by supplying a reasonable shape prior.
+
+### 7.10 How the two layers fit into one forecasting process
+
+The final forecasting logic is therefore not “one model predicts everything.” Instead, it is a layered forecasting system:
+
+1. Estimate current battery state using the causal latent SOH filter.
+2. Use short-horizon models to predict near-term degradation over operationally meaningful horizons.
+3. Use the calibrated backbone to extend the projection beyond the well-supported short-horizon region.
+
+This is a stronger design than forcing a single model to serve both local prediction and end-of-life extrapolation.
+
+In practical terms:
+
+- short-horizon models support flight planning, charging decisions, and schedule optimization,
+- the backbone supports RUL-style trend visualization and replacement-date style estimates,
+- and the two together create a more complete SOH forecasting story than either could alone.
+
+This also makes the frontend easier to interpret. Users can be shown:
+
+- a reliable current SOH estimate,
+- a near-term forecast that responds to recent operating behavior,
+- and a longer-run trajectory that communicates the general expected degradation path.
+
+### 7.11 Transfer-learning experiments
 
 The repository also includes eVTOL transfer experiments. The comparison results show mixed outcomes:
 
@@ -924,6 +998,94 @@ The capstone therefore delivers both technical insight and a working applied sys
 - A multi-horizon performance chart.
 - Circuit-capacity curve vs SOH.
 - A screenshot of the plane dashboard and recommendation calendar.
+
+### Poster-ready figures generated from the repo
+
+The following figures are now saved under `report_figures/` and can be used directly in a poster or slide deck. They were generated from the current latent-SOH, multihorizon forecast, and backbone outputs using `ml_workspace/soh_forecast/generate_poster_figures.py`.
+
+#### Figure A. Latent smoothing and condition-aware estimation
+
+![Latent smoothing and condition-aware estimation](report_figures/poster_latent_smoothing_estimation.png)
+
+File location:
+
+- `report_figures/poster_latent_smoothing_estimation.png`
+
+What it represents:
+
+- The top panel shows plane 166 battery 1 SOH on a flight-index x-axis using only flight events.
+- It compares three series:
+  - raw observed SOH,
+  - causal latent SOH (`latent_soh_filter_pct`),
+  - RTS smoothed latent SOH (`latent_soh_smooth_pct`).
+- The bottom panel shows the condition-aware measurement uncertainty (`measurement_sigma_pct`) assigned to those same flight events.
+
+Why it matters:
+
+- This is the clearest figure for explaining why raw BMS SOH should not be trusted directly.
+- It shows the central contribution of the latent-state model: the system converts unstable observations into a more physically plausible health trajectory.
+- It also visualizes that the Kalman model is not using a fixed trust level. Observation noise changes with telemetry conditions.
+
+#### Figure B. Short-term forecasting performance
+
+![Short-term forecasting results](report_figures/poster_short_term_forecasting.png)
+
+File location:
+
+- `report_figures/poster_short_term_forecasting.png`
+
+What it represents:
+
+- The left panel shows the best validation MAE at each forecast horizon using the saved multihorizon benchmark outputs.
+- The figure also annotates which model family won each horizon.
+- The right panel shows an example 5-flight forecast trajectory against the actual future SOH for one battery example.
+
+Why it matters:
+
+- This figure explains the operational forecasting layer of the project.
+- It shows that the repository does not rely on one model for every timescale. Different models can win at different horizons.
+- It also turns the benchmark from an abstract metrics table into a concrete forecast example that is easier to present on a poster.
+
+#### Figure C. Long-term backbone trend and plane calibration
+
+![Long-term backbone trend](report_figures/poster_long_term_backbone.png)
+
+File location:
+
+- `report_figures/poster_long_term_backbone.png`
+
+What it represents:
+
+- The left panel shows the normalized long-run SOH backbone curves:
+  - `external backbone`: fit from the external eVTOL dataset only,
+  - `combined backbone`: refit after adding plane-calibrated Velis points.
+- The scatter points show the normalized degradation points used to fit those curves.
+- The right panel shows the calibrated backbone trajectories for plane 166 batteries over cumulative flight count, overlaid against the causal latent SOH from the aircraft data.
+
+Why it matters:
+
+- This is the long-run forecasting figure.
+- It explains how the project handles the fact that the aircraft dataset does not span full battery life to 0% adjusted SOH.
+- The figure shows that long-run forecasting is not coming from a blind extrapolation of plane data alone. It is coming from a general life-shape prior adapted back toward the aircraft observations.
+
+#### Optional additional figure
+
+If there is space for one more visual, add a frontend screenshot of the plane dashboard. That rounds out the poster by showing that the work is not just an offline model benchmark, but a decision-support workflow that surfaces health estimates, forecasts, and recommendations to an end user.
+
+Suggested screenshot source:
+
+- a screenshot captured from the `/planes/[planeId]` dashboard in the Next.js frontend
+
+What it should represent:
+
+- current SOH,
+- SOH history,
+- forecast overlay,
+- recommendation or planning context
+
+Why it matters:
+
+- It shows the capstone as a deployed decision-support workflow rather than only a notebook-based modeling exercise.
 
 ### Oral presentation emphasis
 
