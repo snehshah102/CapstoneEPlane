@@ -1,7 +1,6 @@
 FROM node:20-bookworm-slim
 
-ENV NODE_ENV=production \
-    PORT=10000 \
+ENV PORT=10000 \
     PYTHON=python3 \
     VIRTUAL_ENV=/opt/venv \
     PATH="/opt/venv/bin:$PATH" \
@@ -28,6 +27,8 @@ COPY . .
 
 WORKDIR /app/frontend
 RUN npm run build
+
+ENV NODE_ENV=production
 
 EXPOSE 10000
 
