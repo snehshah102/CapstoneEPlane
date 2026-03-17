@@ -50,18 +50,49 @@ All responses are validated with Zod schemas in `lib/contracts/schemas.ts`.
 - `/planes/[planeId]` detailed plane dashboard
 - `/learn` interactive SOH factor simulator
 
-## Vercel Free Tier Deployment Runbook
+## Production Deployment (Render)
 
-1. Push repository to GitHub and ensure `frontend/` is committed.
-2. In Vercel, click `Add New Project` and import the repo.
-3. Set project root directory to `frontend`.
-4. Framework preset: `Next.js`.
-5. Build command: `npm run build`.
-6. Install command: `npm install`.
-7. Output directory: default (leave blank).
-8. Production branch: `main`.
-9. Enable Preview Deployments for pull requests.
-10. Use the generated default `*.vercel.app` URL for presentation day.
+This app is deployed most safely as a single Dockerized Render web service.
+That matches local behavior closely because the production service includes:
+
+- the Next.js app in `frontend/`
+- the Python live-data scripts in `frontend/scripts/`
+- the repo data and model outputs in `data/` and `ml_workspace/`
+
+Deployment files now live at the repo root:
+
+- `../Dockerfile`
+- `../render.yaml`
+- `../requirements.txt`
+
+### One-time setup
+
+1. Push the whole repository to GitHub, including:
+   - `frontend/`
+   - `data/`
+   - `ml_workspace/`
+   - `Dockerfile`
+   - `render.yaml`
+   - `requirements.txt`
+2. Create a Render account and connect your GitHub account.
+3. In Render, create a new service from this repo.
+4. Use the repo-root `render.yaml` Blueprint or choose the repo and let Render build from `Dockerfile`.
+5. If prompted for environment variables:
+   - set `NODE_ENV=production`
+   - set `PORT=10000`
+   - set `PYTHON=python3`
+   - optionally set `EIA_API_KEY` if you want live US charging-cost pricing
+6. Let Render complete the first Docker build and deploy.
+
+### Auto-deploy behavior
+
+- The repo is configured for commit-based auto-deploys in `render.yaml`.
+- After the first service is linked to GitHub, each push to the linked branch should trigger a fresh deploy automatically.
+
+### Important free-tier note
+
+- Render Free web services spin down after 15 minutes of no traffic and can take about a minute to wake up again.
+- If you need always-on presentation readiness, use a paid instance type instead of Free.
 
 ## Testing Note
 
